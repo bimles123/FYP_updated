@@ -115,9 +115,16 @@ app.put("/api/admin/users/:id", async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    // Update the user status
     const user = await User.findByIdAndUpdate(id, { status }, { new: true });
-
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Soft-delete or restore all their hotels
+    if (status === "banned") {
+      await Hotel.updateMany({ user: id }, { isDeleted: true });
+    } else if (status === "active") {
+      await Hotel.updateMany({ user: id }, { isDeleted: false });
+    }
 
     res.json(user);
   } catch (err) {
@@ -204,12 +211,21 @@ app.use('/api', esewaRoute);
 // Get all hotels
 app.get('/api/hotels', async (req, res) => {
   try {
-    const hotels = await Hotel.find().populate('user', 'name');
-    res.json(hotels);
+    // Only find hotels not soft-deleted, and populate user status
+    const hotels = await Hotel.find({ isDeleted: false })
+      .populate('user', 'name status');
+
+    // Only return hotels where the user is not banned (or user info missing)
+    const visibleHotels = hotels.filter(hotel => 
+      !hotel.user || hotel.user.status !== "banned"
+    );
+
+    res.json(visibleHotels);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch hotels' });
   }
 });
+
 
 // Create a hotel
 app.post('/api/hotels', async (req, res) => {
@@ -710,8 +726,9 @@ app.get('/api/my-bookings/:userId', async (req, res) => {
   try {
     const myBookings = await Booking.find({ user: userId }).populate({
       path: 'hotel',
-      populate: { path: 'user', select: 'name email' }
-    });
+      populate: { path: 'user', select: 'name email status' }
+    })
+    .populate({ path: 'user', select: 'name email status' });
     
     const listedHotels = await Hotel.find({ user: userId }).select('_id');
     const hotelIds = listedHotels.map(h => h._id);

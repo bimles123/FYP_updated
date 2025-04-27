@@ -1,0 +1,361 @@
+/* Main Container */
+.bookings-container {
+  max-width: 1024px;
+  margin: 80px auto 0;
+  padding: 24px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Page Title */
+.bookings-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 32px;
+  color: #2d3748;
+  position: relative;
+}
+
+.bookings-title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  margin: 12px auto 0;
+  border-radius: 2px;
+}
+
+/* Section Styling */
+.bookings-section {
+  margin-bottom: 48px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Section Titles */
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  position: relative;
+}
+
+.booked-title {
+  color: #3b82f6;
+}
+
+.received-title {
+  color: #8b5cf6;
+}
+
+.section-title::before {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+}
+
+.booked-title::before {
+  background-color: #3b82f6;
+}
+
+.received-title::before {
+  background-color: #8b5cf6;
+}
+
+/* Empty State */
+.empty-message {
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Booking Cards */
+.booking-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.booking-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Hotel Information */
+.hotel-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hotel-location {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.booking-dates {
+  font-size: 0.9375rem;
+  margin-bottom: 10px;
+  color: #475569;
+}
+
+.booking-status {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 12px;
+}
+
+/* Guest Information */
+.guest-info {
+  font-size: 0.9375rem;
+  color: #475569;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Banned Tags and Messages */
+.banned-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background-color: #ef4444;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.banned-message {
+  font-size: 0.875rem;
+  color: #ef4444;
+  font-weight: 500;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background-color: #fee2e2;
+  border-radius: 6px;
+  border-left: 3px solid #ef4444;
+}
+
+/* Button Styling */
+.btn {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Button Variations */
+.btn-pay {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-pay:hover {
+  background-color: #059669;
+}
+
+.btn-clear {
+  background-color: #e2e8f0;
+  color: #475569;
+  margin-left: 8px;
+}
+
+.btn-clear:hover {
+  background-color: #cbd5e1;
+}
+
+.btn-accept {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-accept:hover {
+  background-color: #059669;
+}
+
+.btn-reject {
+  background-color: #ef4444;
+  color: white;
+  margin-left: 8px;
+}
+
+.btn-reject:hover {
+  background-color: #dc2626;
+}
+
+.btn-chat {
+  background-color: #3b82f6;
+  color: white;
+  margin-left: 8px;
+}
+
+.btn-chat:hover {
+  background-color: #2563eb;
+}
+
+.btn-disabled {
+  background-color: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.btn-esewa {
+  background-color: #10b981;
+  color: white;
+  width: 100%;
+  padding: 10px;
+  font-weight: 600;
+}
+
+.btn-esewa:hover {
+  background-color: #059669;
+}
+
+/* Action Containers */
+.booking-actions,
+.request-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.payment-modal {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #ef4444;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background-color: #fee2e2;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #10b981;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-details {
+  font-size: 0.9375rem;
+  color: #475569;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .bookings-container {
+    padding: 16px;
+  }
+
+  .bookings-section {
+    padding: 16px;
+  }
+
+  .booking-card {
+    padding: 16px;
+  }
+
+  .request-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .request-actions button {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .btn-reject,
+  .btn-chat {
+    margin-left: 0;
+  }
+}

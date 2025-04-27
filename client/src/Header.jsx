@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import axios from "axios"
 import "./assets/css/header.css"
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom"
 
 export default function Header({ searchValue, setSearchValue }) {
   const location = useLocation()
@@ -20,6 +18,12 @@ export default function Header({ searchValue, setSearchValue }) {
   })
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [username, setUsername] = useState("")
+
+  // --- Admin Logic ---
+  const storedUser = localStorage.getItem("user")
+  const user = storedUser ? JSON.parse(storedUser) : null
+  const isAdmin = user && user.role === "admin"
+  // -------------------
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -71,40 +75,35 @@ export default function Header({ searchValue, setSearchValue }) {
     }
   }
 
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false)
 
   const handleCloseSearch = () => {
-    setSearchValue("");
-    setIsSearching(false);
-  };
+    setSearchValue("")
+    setIsSearching(false)
+  }
 
-  const [unreadMessages, setUnreadMessages] = useState([]);
-const [showDropdown, setShowDropdown] = useState(false);
-const navigate = useNavigate();
+  const [unreadMessages, setUnreadMessages] = useState([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const navigate = useNavigate()
 
-useEffect(() => {
-  const fetchNotifications = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user?.id) return;
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const user = JSON.parse(localStorage.getItem("user"))
+      if (!user?.id) return
 
-    try {
-      const res = await axios.get(`/api/unread-messages/${user.id}`);
-      setUnreadMessages(res.data);
-    } catch (err) {
-      console.error("Failed to fetch notifications", err);
+      try {
+        const res = await axios.get(`/api/unread-messages/${user.id}`)
+        setUnreadMessages(res.data)
+      } catch (err) {
+        console.error("Failed to fetch notifications", err)
+      }
     }
-  };
 
-  fetchNotifications();
-  const interval = setInterval(fetchNotifications, 5000); // Refresh every 5s
-  return () => clearInterval(interval);
-}, []);
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 5000) // Refresh every 5s
+    return () => clearInterval(interval)
+  }, [])
 
-
-
-
-
-  
   return (
     <>
       <header className="flex flex-col bg-white shadow-md fixed left-0 right-0 z-50">
@@ -164,8 +163,6 @@ useEffect(() => {
             </div>
           </nav>
 
-
-
           <button
             className="toggle-sidebar flex items-center gap-2 border border-gray-200 p-2 rounded-full hover:bg-gray-50 hover:border-blue-300 transition-colors"
             onClick={toggleSidebar}
@@ -197,7 +194,7 @@ useEffect(() => {
             <div className="flex gap-6 flex-wrap items-center">
 
               <Link
-                to="/reachers"
+                to="/home"
                 className="px-3 py-1.5 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200 cursor-pointer font-medium flex items-center gap-1.5"
               >
                 <svg
@@ -265,11 +262,6 @@ useEffect(() => {
                   </span>
                 )}
               </Link>
-
-
-
-              
-
             </div>
             <Link to="/category">
               <button className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors shadow-sm">
@@ -373,23 +365,36 @@ useEffect(() => {
                     Add Hotel
                   </button>
                 </Link>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors text-left">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
-                    />
-                  </svg>
-                  Manage Listings
-                </button>
+                <Link to="/mybookings">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors text-left">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
+                      />
+                    </svg>
+                    Manage Listings
+                  </button>
+                </Link>
+                {/* ADMIN PANEL LINK: Only visible for admins */}
+                {isAdmin && (
+                  <Link to="/admin-dashboard">
+                    <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors text-left">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.75h16.5M3.75 12h16.5M3.75 18.25h16.5" />
+                      </svg>
+                      Admin Panel
+                    </button>
+                  </Link>
+                )}
               </div>
 
               <div className="space-y-1 mb-6">
@@ -457,9 +462,7 @@ useEffect(() => {
           </div>
         </div>
       </header>
-
       <div className="h-32"></div>
     </>
   )
 }
-

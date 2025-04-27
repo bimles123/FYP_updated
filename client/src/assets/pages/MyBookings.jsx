@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import '../css/MyBookings.css'; 
 
 export default function MyBookings() {
   const [myBookings, setMyBookings] = useState([]);
@@ -128,31 +129,31 @@ export default function MyBookings() {
       if (justPaidBookingId) {
         localStorage.setItem(`paid_${justPaidBookingId}`, JSON.stringify({ status: 'PAID' }));
         markPaidLocally(justPaidBookingId);
-  
+
         try {
           const res = await axios.get(`/api/my-bookings/${currentUser.id}`);
           setMyBookings(res.data.myBookings);
           setReceivedBookings(res.data.bookingsForMyHotels);
-  
+
           const paidBooking = res.data.myBookings.find(b => b._id === justPaidBookingId);
           if (paidBooking && paidBooking.hotel?.user?._id) {
-            const nights = calculateNights(paidBooking.checkIn, paidBooking.checkOut); // 🔁 NEW
-            const amount = paidBooking.hotel.pricePerNight * nights; // 🔁 NEW
-  
-            // 🔁 NEW: Record the payment
+            const nights = calculateNights(paidBooking.checkIn, paidBooking.checkOut);
+            const amount = paidBooking.hotel.pricePerNight * nights;
+
+            // Record the payment
             await axios.post("/api/payments", {
               userId: currentUser.id,
               hotelId: paidBooking.hotel._id,
               amount,
             });
-  
+
             // Send confirmation message
             await axios.post("/api/messages", {
               senderId: paidBooking.hotel.user._id,
               receiverId: currentUser.id,
               message: `💰 Payment received for your booking at "${paidBooking.hotel.name}". Thank you!`
             });
-  
+
             console.log("✅ Payment recorded & message sent.");
           } else {
             console.warn("⚠️ Booking not found or hotel.user missing");
@@ -160,24 +161,24 @@ export default function MyBookings() {
         } catch (err) {
           console.error("❌ Error sending payment confirmation:", err);
         }
-  
+
         setJustPaidBookingId(null);
       }
     };
-  
+
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [justPaidBookingId, currentUser]);
 
   return (
-    <div className="max-w-5xl mx-auto mt-20 p-4">
-      <h1 className="text-3xl font-bold text-center mb-8">📘 My Bookings</h1>
+    <div className="bookings-container">
+      <h1 className="bookings-title">📘 My Bookings</h1>
 
       {/* Hotels I Booked */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4 text-blue-700">📌 Hotels I Booked</h2>
+      <section className="bookings-section">
+        <h2 className="section-title booked-title">📌 Hotels I Booked</h2>
         {myBookings.length === 0 ? (
-          <p className="text-gray-500">No bookings found.</p>
+          <p className="empty-message">No bookings found.</p>
         ) : (
           myBookings.map((b, i) => {
             const nights = calculateNights(b.checkIn, b.checkOut);
@@ -186,60 +187,82 @@ export default function MyBookings() {
             const paid = hasPaid(b._id);
 
             return (
-              <div key={i} className="border p-4 rounded mb-4 shadow bg-white">
-                <div className="text-lg font-bold">{b.hotel?.name || "Hotel deleted"}</div>
-                <div className="text-sm text-gray-500">{b.hotel?.location || "Unknown"}</div>
-                <div className="text-sm">📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}</div>
-                <div className="text-sm text-green-600 font-semibold">Status: {b.status}</div>
+              <div key={i} className="booking-card">
+                <div className="hotel-name">
+                  {b.hotel?.name || "Hotel deleted"}
+                  {b.hotel?.user?.status === "banned" && (
+                    <span className="banned-tag">Host banned</span>
+                  )}
+                </div>
+                <div className="hotel-location">{b.hotel?.location || "Unknown"}</div>
+                <div className="booking-dates">
+                  📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}
+                </div>
+                <div className="booking-status">Status: {b.status}</div>
 
-                {b.status === 'accepted' && (
-                  paid ? (
-                    <button disabled className="mt-2 bg-gray-300 text-white px-4 py-2 rounded">✅ Paid</button>
-                  ) : (
-                    <button onClick={() => openEsewaModal(b)} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">💸 Pay Now</button>
-                  )
+                {b.hotel?.user?.status === "banned" && (
+                  <div className="banned-message">
+                    This host has been banned. This hotel is no longer available.
+                  </div>
                 )}
 
-                <button onClick={() => handleClear(b._id)} className="mt-2 ml-3 bg-gray-300 text-sm px-3 py-1 rounded">🗑️ Clear</button>
+                <div className="booking-actions">
+                  {b.status === 'accepted' && b.hotel?.user?.status !== "banned" && (
+                    paid ? (
+                      <button disabled className="btn btn-disabled">✅ Paid</button>
+                    ) : (
+                      <button onClick={() => openEsewaModal(b)} className="btn btn-pay">💸 Pay Now</button>
+                    )
+                  )}
+                  <button onClick={() => handleClear(b._id)} className="btn btn-clear">🗑️ Clear</button>
+                </div>
               </div>
             );
           })
         )}
-      </div>
+      </section>
 
       {/* Bookings Received */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4 text-purple-700">📥 Bookings Received on My Listings</h2>
+      <section className="bookings-section">
+        <h2 className="section-title received-title">📥 Bookings Received on My Listings</h2>
         {receivedBookings.filter(b => b.status === 'pending').length === 0 ? (
-          <p className="text-gray-500">No pending requests.</p>
+          <p className="empty-message">No pending requests.</p>
         ) : (
           receivedBookings.filter(b => b.status === 'pending').map((b, i) => (
-            <div key={i} className="border p-4 rounded mb-4 shadow bg-white">
-              <div className="text-lg font-semibold">{b.hotel?.name || "Hotel deleted"}</div>
-              <div className="text-sm text-gray-500">👤 {b.user?.name || "Unknown"} ({b.user?.email})</div>
-              <div className="text-sm">📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}</div>
-              <div className="flex gap-2 mt-3">
-                <button onClick={() => handleAccept(b._id)} className="bg-green-500 text-white px-4 py-1 rounded">✅ Accept</button>
-                <button onClick={() => handleCancel(b._id)} className="bg-red-500 text-white px-4 py-1 rounded">❌ Reject</button>
-                <button onClick={() => handleChat(b.user)} className="bg-blue-500 text-white px-4 py-1 rounded">💬 Chat</button>
+            <div key={i} className="booking-card">
+              <div className="hotel-name">{b.hotel?.name || "Hotel deleted"}</div>
+              <div className="guest-info">
+                👤 {b.user?.name || "Unknown"} ({b.user?.email})
+                {b.user?.status === "banned" && (
+                  <span className="banned-tag">User banned</span>
+                )}
+              </div>
+              <div className="booking-dates">
+                📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}
+              </div>
+              <div className="request-actions">
+                <button onClick={() => handleAccept(b._id)} className="btn btn-accept">✅ Accept</button>
+                <button onClick={() => handleCancel(b._id)} className="btn btn-reject">❌ Reject</button>
+                <button onClick={() => handleChat(b.user)} className="btn btn-chat">💬 Chat</button>
               </div>
             </div>
           ))
         )}
-      </div>
+      </section>
 
       {/* eSewa Modal */}
       {showEsewaModal && selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded p-6 w-full max-w-md relative">
-            <button onClick={closeEsewaModal} className="absolute top-2 right-3 text-red-600">✖</button>
-            <h2 className="text-lg font-semibold mb-4 text-green-600">Confirm Payment</h2>
+        <div className="modal-overlay">
+          <div className="payment-modal">
+            <button onClick={closeEsewaModal} className="modal-close">✖</button>
+            <h2 className="modal-title">Confirm Payment</h2>
 
             <form
               action="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
               method="POST"
               target="_blank"
               onSubmit={() => setJustPaidBookingId(selectedBooking._id)}
+              className="payment-form"
             >
               <input type="hidden" name="amount" value={((selectedBooking.hotel?.pricePerNight || 0) * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
               <input type="hidden" name="tax_amount" value="0" />
@@ -253,10 +276,10 @@ export default function MyBookings() {
               <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code" />
               <input type="hidden" name="signature" value={signature} />
 
-              <p className="text-sm mb-3">
+              <p className="payment-details">
                 Paying रु {selectedBooking.hotel?.pricePerNight || 0} x {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights
               </p>
-              <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm w-full">
+              <button type="submit" className="btn btn-esewa">
                 Proceed to eSewa
               </button>
             </form>

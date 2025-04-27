@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import axios from "axios"
 import "../css/ForumPage.css"
 
 const ForumPage = () => {
   const { hotelId } = useParams()
+  const navigate = useNavigate()
   const currentUser = JSON.parse(localStorage.getItem("user"))
   const [hotel, setHotel] = useState(null)
   const [reviews, setReviews] = useState([])
@@ -81,7 +82,6 @@ const ForumPage = () => {
       setError("Could not delete your review.");
     }
   };
-  
 
   const averageRating = reviews.length
     ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
@@ -99,9 +99,13 @@ const ForumPage = () => {
   return (
     <div className="forum-container">
       <div className="forum-header">
-        <Link to="/hotels" className="back-link">
-          <span>←</span> Back to Hotels
-        </Link>
+        <button
+          onClick={() => navigate(-1)}
+          className="back-link"
+          style={{ border: "none", background: "none", cursor: "pointer", padding: 0 }}
+        >
+          <span>←</span> Back
+        </button>
 
         {hotel && (
           <div className="hotel-info">
