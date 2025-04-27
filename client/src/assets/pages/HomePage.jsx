@@ -48,7 +48,7 @@ const HomePage = ({ searchValue }) => {
             <div className="hotel-info">
               <h2>{hotel.name}</h2>
               <p>{hotel.location}</p>
-              <p>Price: ${hotel.pricePerNight} per night</p>
+              <p>Price: रु{hotel.pricePerNight} per night</p>
               <p>Status: {hotel.stars} ⭐</p>
             </div>
           </div>

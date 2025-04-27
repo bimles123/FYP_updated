@@ -37,7 +37,7 @@ const CategoryPage = () => {
           : priceRange === "4"
           ? hotel.pricePerNight > 300
           : true;
-      const matchesRating = rating ? hotel.rating === parseInt(rating) : true;
+      const matchesRating = rating ? hotel.stars === parseInt(rating) : true;
 
       return matchesName && matchesLocation && matchesPrice && matchesRating;
     });
@@ -72,10 +72,10 @@ const CategoryPage = () => {
           />
           <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)}>
             <option value="">Select Price Range</option>
-            <option value="1">Under $100</option>
-            <option value="2">$100 - $200</option>
-            <option value="3">$200 - $300</option>
-            <option value="4">Above $300</option>
+            <option value="1">Under रु100</option>
+            <option value="2">रु100 - रु200</option>
+            <option value="3">रु200 - रु300</option>
+            <option value="4">Above रु300</option>
           </select>
           <select value={rating} onChange={(e) => setRating(e.target.value)}>
             <option value="">Select Rating</option>
@@ -99,8 +99,8 @@ const CategoryPage = () => {
                 <div className="hotel-info">
                   <h2>{hotel.name}</h2>
                   <p>{hotel.location}</p>
-                  <p>Price: ${hotel.pricePerNight} per night</p>
-                  <p>Rating: {hotel.rating} ⭐</p>
+                  <p>Price: रु{hotel.pricePerNight} per night</p>
+                  <p>Rating: {hotel.stars} ⭐</p>
                 </div>
               </div>
             ))

@@ -11,11 +11,11 @@ const HotelDetailPage = () => {
   const [checkOut, setCheckOut] = useState("");
   const [isOwner, setIsOwner] = useState(false);
   const [uploadFiles, setUploadFiles] = useState([]);
+  const [coverImageFile, setCoverImageFile] = useState(null);
   const user = JSON.parse(localStorage.getItem("user"));
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
-
 
   const fetchHotel = async () => {
     try {
@@ -105,6 +105,30 @@ const HotelDetailPage = () => {
     }
   };
 
+  const handleUpdateCoverImage = async () => {
+    if (!coverImageFile) return alert("Please select an image.");
+
+    try {
+      const formData = new FormData();
+      formData.append("media", coverImageFile);
+
+      const uploadRes = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const uploaded = uploadRes.data;
+      const newImageUrl = uploaded[0].url;
+
+      await axios.put(`/api/hotels/${hotel._id}/cover`, { image: newImageUrl });
+      alert("✅ Cover image updated!");
+      fetchHotel();
+      setCoverImageFile(null);
+    } catch (err) {
+      console.error("Cover image update failed:", err);
+      alert("❌ Failed to update cover image.");
+    }
+  };
+
   if (!hotel) return <div className="text-center mt-10">Loading...</div>;
   const currentMedia = hotel.media && hotel.media[currentMediaIndex];
 
@@ -141,17 +165,16 @@ const HotelDetailPage = () => {
           </p>
         )}
 
-{!isOwner && user && (
-  <div className="mt-6">
-    <button
-      onClick={() => setShowReportModal(true)}
-      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm"
-    >
-      🚩 Report this Hotel
-    </button>
-  </div>
-)}
-
+        {!isOwner && user && (
+          <div className="mt-6">
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm"
+            >
+              🚩 Report this Hotel
+            </button>
+          </div>
+        )}
 
         {currentMedia && (
           <div className="media-gallery">
@@ -171,6 +194,17 @@ const HotelDetailPage = () => {
 
         {isOwner && (
           <>
+            <div className="mt-6">
+              <h3 className="font-semibold mb-2">Update Cover Image</h3>
+              <input type="file" accept="image/*" onChange={(e) => setCoverImageFile(e.target.files[0])} />
+              <button
+                onClick={handleUpdateCoverImage}
+                className="mt-2 bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700"
+              >
+                Update Cover
+              </button>
+            </div>
+
             <div className="mt-6">
               <h3 className="font-semibold mb-2">Add New Media</h3>
               <input type="file" multiple onChange={handleFileChange} className="mb-2" />
@@ -200,66 +234,66 @@ const HotelDetailPage = () => {
           </>
         )}
       </div>
+
       {showReportModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-      <h2 className="text-lg font-bold mb-4 text-red-600">Report This Hotel</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4 text-red-600">Report This Hotel</h2>
 
-      <label className="block mb-2 font-medium">Reason for reporting:</label>
-      <select
-        value={reportReason}
-        onChange={(e) => setReportReason(e.target.value)}
-        className="border p-2 rounded w-full mb-4"
-      >
-        <option value="">-- Select a reason --</option>
-        <option value="Fake listing">Fake or non-existent hotel</option>
-        <option value="Policy violation">Violates site policies</option>
-        <option value="Misleading info">Misleading or false information</option>
-        <option value="Suspicious activity">Suspicious or scam activity</option>
-      </select>
+            <label className="block mb-2 font-medium">Reason for reporting:</label>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="border p-2 rounded w-full mb-4"
+            >
+              <option value="">-- Select a reason --</option>
+              <option value="Fake listing">Fake or non-existent hotel</option>
+              <option value="Policy violation">Violates site policies</option>
+              <option value="Misleading info">Misleading or false information</option>
+              <option value="Suspicious activity">Suspicious or scam activity</option>
+            </select>
 
-      <label className="block mb-2 font-medium">Additional Details (optional):</label>
-      <textarea
-        value={reportDetails}
-        onChange={(e) => setReportDetails(e.target.value)}
-        placeholder="Tell us what you found wrong..."
-        className="w-full border p-2 rounded mb-4"
-      />
+            <label className="block mb-2 font-medium">Additional Details (optional):</label>
+            <textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              placeholder="Tell us what you found wrong..."
+              className="w-full border p-2 rounded mb-4"
+            />
 
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={() => setShowReportModal(false)}
-          className="px-4 py-2 text-sm bg-gray-300 hover:bg-gray-400 rounded"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={async () => {
-            if (!reportReason) return alert("Please select a reason.");
-            try {
-              await axios.post("/api/report-hotel", {
-                hotelId: hotel._id,
-                reporterId: user.id,
-                reason: reportReason,
-                details: reportDetails,
-              });
-              alert("✅ Report submitted to admin.");
-              setReportReason("");
-              setReportDetails("");
-              setShowReportModal(false);
-            } catch (err) {
-              alert("Failed to submit report.");
-            }
-          }}
-          className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded"
-        >
-          Submit Report
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="px-4 py-2 text-sm bg-gray-300 hover:bg-gray-400 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!reportReason) return alert("Please select a reason.");
+                  try {
+                    await axios.post("/api/report-hotel", {
+                      hotelId: hotel._id,
+                      reporterId: user.id,
+                      reason: reportReason,
+                      details: reportDetails,
+                    });
+                    alert("✅ Report submitted to admin.");
+                    setReportReason("");
+                    setReportDetails("");
+                    setShowReportModal(false);
+                  } catch (err) {
+                    alert("Failed to submit report.");
+                  }
+                }}
+                className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded"
+              >
+                Submit Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

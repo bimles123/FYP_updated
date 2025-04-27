@@ -163,7 +163,7 @@ const UserProfilePage = () => {
                 <>
                   <h3 className="text-lg font-semibold">{hotel.name}</h3>
                   <p><strong>Location:</strong> {hotel.location}</p>
-                  <p><strong>Price:</strong> ${hotel.pricePerNight}</p>
+                  <p><strong>Price:</strong> रु{hotel.pricePerNight}</p>
                   <p><strong>Status:</strong> {hotel.stars} Star</p>
                   <p><strong>Description:</strong> {hotel.description || "No description."}</p>
 

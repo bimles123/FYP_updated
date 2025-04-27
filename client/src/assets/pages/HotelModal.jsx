@@ -26,7 +26,7 @@ const HotelModal = ({ hotel, onClose, onNext }) => {
           <div className="modal-details">
             <div className="details-header">
               <h2 className="modal-title">{hotel.name}</h2>
-              <p className="price-tag">${hotel.pricePerNight}<span>/night</span></p>
+              <p className="price-tag">रु{hotel.pricePerNight}<span>/night</span></p>
             </div>
             
             <div className="location-container">

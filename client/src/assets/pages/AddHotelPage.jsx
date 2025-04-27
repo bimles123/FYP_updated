@@ -11,7 +11,8 @@ const AddHotelPage = () => {
   const [pricePerNight, setPricePerNight] = useState("")
   const [stars, setStars] = useState("")
   const [description, setDescription] = useState("")
-  const [image, setImage] = useState("")
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState("")
   const [mediaFiles, setMediaFiles] = useState([])
   const [mediaPreviews, setMediaPreviews] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -19,10 +20,17 @@ const AddHotelPage = () => {
 
   const user = JSON.parse(localStorage.getItem("user"))
 
+  const handleCoverImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files)
     setMediaFiles(files)
-
     const previews = files.map((file) => URL.createObjectURL(file))
     setMediaPreviews(previews)
   }
@@ -33,13 +41,20 @@ const AddHotelPage = () => {
 
     try {
       const formData = new FormData()
+      if (imageFile) formData.append("media", imageFile)
       mediaFiles.forEach((file) => formData.append("media", file))
 
       const uploadRes = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
 
-      const uploadedMedia = uploadRes.data
+      const uploadedUrls = uploadRes.data
+      const coverImageUrl = uploadedUrls[0].url
+
+      const additionalMedia = uploadedUrls.slice(1).map((file) => ({
+        type: file.url.includes("video") ? "video" : "image",
+        url: file.url,
+      }))
 
       await axios.post("/api/hotels", {
         name,
@@ -47,9 +62,9 @@ const AddHotelPage = () => {
         pricePerNight,
         stars,
         description,
-        image,
+        image: coverImageUrl,
         user: user.id,
-        media: uploadedMedia,
+        media: additionalMedia,
       })
 
       alert("Hotel added successfully!")
@@ -58,7 +73,8 @@ const AddHotelPage = () => {
       setPricePerNight("")
       setStars("")
       setDescription("")
-      setImage("")
+      setImageFile(null)
+      setImagePreview("")
       setMediaFiles([])
       setMediaPreviews([])
       navigate("/home")
@@ -98,7 +114,7 @@ const AddHotelPage = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pricePerNight">Price Per Night ($)</label>
+            <label htmlFor="pricePerNight">Price Per Night (रु)</label>
             <input
               type="number"
               id="pricePerNight"
@@ -133,15 +149,9 @@ const AddHotelPage = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="image">Cover Image URL</label>
-            <input
-              type="text"
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              required
-            />
+            <label htmlFor="coverImage">Upload Cover Image</label>
+            <input type="file" id="coverImage" accept="image/*" onChange={handleCoverImageChange} required />
+            {imagePreview && <img src={imagePreview} alt="Cover Preview" className="media-preview" />}
           </div>
           <div className="form-group">
             <label htmlFor="media">Upload Additional Media</label>

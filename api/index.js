@@ -131,6 +131,24 @@ app.put('/api/hotels/:id', async (req, res) => {
   }
 });
 
+
+// Update cover image
+app.put("/api/hotels/:id/cover", async (req, res) => {
+  const { image } = req.body;
+  try {
+    const hotel = await Hotel.findByIdAndUpdate(
+      req.params.id,
+      { image },
+      { new: true }
+    );
+    res.json(hotel);
+  } catch (err) {
+    console.error("Error updating cover image:", err);
+    res.status(500).json({ error: "Failed to update cover image" });
+  }
+});
+
+
 // Delete a hotel
 app.delete('/api/hotels/:id', async (req, res) => {
   const hotelId = req.params.id;
@@ -528,10 +546,12 @@ app.put('/api/bookings/:id/accept', async (req, res) => {
       { new: true }
     ).populate('user').populate('hotel');
 
+    const payNowLink = `http://localhost:5173/payment/${updated._id}`;
+
     await Message.create({
       sender: updated.hotel.user,
       receiver: updated.user._id,
-      message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.`
+      message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.\n\n💳 Please proceed to payment here: ${payNowLink}`
     });
 
     res.json(updated);
@@ -539,6 +559,7 @@ app.put('/api/bookings/:id/accept', async (req, res) => {
     res.status(500).json({ error: 'Failed to accept booking' });
   }
 });
+
 
 // Cancel booking
 app.put('/api/bookings/:id/cancel', async (req, res) => {
