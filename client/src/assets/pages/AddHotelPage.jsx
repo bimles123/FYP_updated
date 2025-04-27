@@ -121,10 +121,25 @@ const AddHotelPage = () => {
           </div>
           <div className="form-group">
             <label htmlFor="media">Upload Additional Media</label>
-            <input type="file" id="media" accept="image/*,video/*" multiple onChange={handleFileChange} />
+            <input
+              type="file"
+              id="media"
+              accept="image/*,video/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files);
+                setMediaFiles(prev => [...prev, ...files]);
+
+                const previews = files.map(file => {
+                  return URL.createObjectURL(file);
+                });
+                setMediaPreviews(prev => [...prev, ...previews]);
+              }}
+            />
+            
             <div className="preview-container">
               {mediaPreviews.map((src, idx) =>
-                src.includes("video") || mediaFiles[idx].type.startsWith("video") ? (
+                mediaFiles[idx]?.type?.startsWith("video") ? (
                   <video key={idx} src={src} controls className="media-preview" />
                 ) : (
                   <img key={idx} src={src || "/placeholder.svg"} alt="preview" className="media-preview" />
@@ -132,6 +147,7 @@ const AddHotelPage = () => {
               )}
             </div>
           </div>
+
           <button type="submit" className="submit-button" disabled={isSubmitting}>
             {isSubmitting ? "Adding Hotel..." : "Add Hotel"}
           </button>

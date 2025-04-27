@@ -14,7 +14,7 @@ import HotelDetailPage from './assets/pages/HotelDetailPage.jsx';
 import MyBookings from './assets/pages/MyBookings.jsx';
 import AdminDashboard from './assets/pages/AdminDashboard.jsx';
 import Notification from './assets/pages/Notification.jsx';
-
+import ForumPage from './assets/pages/ForumPage.jsx';
 
 
 
@@ -70,6 +70,8 @@ function App() {
         <Route path="/mybookings" element={<MyBookings />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/notification" element={<Notification />} />
+        <Route path="/forum/:hotelId" element={<ForumPage />} />
+
         
       </Route>
     </Routes>

@@ -68,6 +68,38 @@ app.post('/api/upload', upload.array('media', 10), (req, res) => {
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('MongoDB connection error:', error));
+  
+  const Review = require('./models/Review'); // 
+  // Get all reviews for a hotel
+app.get('/api/hotels/:id/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({ hotel: req.params.id }).populate('user', 'name');
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load reviews' });
+  }
+});
+
+// Post a new review
+app.post('/api/hotels/:id/reviews', async (req, res) => {
+  const { comment, stars, userId } = req.body;  // <-- ✅ use 'stars'
+  try {
+    const existing = await Review.findOne({ hotel: req.params.id, user: userId });
+    if (existing) return res.status(400).json({ error: "You've already reviewed this hotel." });
+
+    const newReview = await Review.create({
+      hotel: req.params.id,
+      user: userId,
+      stars,
+      comment,
+    });
+    res.json(newReview);
+  } catch (err) {
+    console.error("❌ Error posting review:", err);
+    res.status(500).json({ error: 'Failed to post review' });
+  }
+});
+
 
 
 //recent
