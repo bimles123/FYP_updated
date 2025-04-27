@@ -4,12 +4,59 @@ header {
   top: 0;
   left: 0;
   width: 100%;
-  padding: 10px 20px;
   z-index: 1000; /* Ensures the header stays on top */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  background-color: white;
 }
 
 /* To prevent content from being hidden under the header */
 body {
-  padding-top: 60px; /* Adjust based on the header's height */
+  padding-top: 80px; /* Adjusted for the taller header */
 }
+
+/* Animation for dropdown menus */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Sidebar transition */
+.sidebar {
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  nav.rounded-full {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .border-l {
+    display: none;
+  }
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Hover effects */
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+

@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import "../css/HomePage.css"; // Ensure to create a CSS file for styling
+import "../css/HomePage.css";
 import axios from "axios";
-import HotelModal from "./HotelModal"; // Import the hotel overlay
+import HotelModal from "./HotelModal";
 
-const HomePage = () => {
+const HomePage = ({ searchValue }) => {
   const [hotels, setHotels] = useState([]);
   const [selectedHotel, setSelectedHotel] = useState(null);
 
@@ -20,22 +20,26 @@ const HomePage = () => {
     fetchHotels();
   }, []);
 
-  // Function to move to the next hotel in the list
   const handleNextHotel = () => {
     if (!selectedHotel) return;
     const currentIndex = hotels.findIndex(hotel => hotel._id === selectedHotel._id);
-    const nextIndex = (currentIndex + 1) % hotels.length; // Loop back to the first hotel
+    const nextIndex = (currentIndex + 1) % hotels.length;
     setSelectedHotel(hotels[nextIndex]);
   };
+
+  // 🔍 Filter based on location search
+  const filteredHotels = hotels.filter(hotel =>
+    hotel.location.toLowerCase().includes(searchValue.toLowerCase())
+  );
 
   return (
     <div className="homepage">
       <div className="hotel-list">
-        {hotels.map((hotel) => (
+        {(searchValue ? filteredHotels : hotels).map((hotel) => (
           <div
             key={hotel._id}
             className="hotel-card"
-            onClick={() => setSelectedHotel(hotel)} // Open modal on click
+            onClick={() => setSelectedHotel(hotel)}
           >
             <img src={hotel.image} alt={hotel.name} className="hotel-image" />
             <div className="hotel-info">
@@ -48,7 +52,6 @@ const HomePage = () => {
         ))}
       </div>
 
-      {/* Show hotel overlay modal when a hotel is selected */}
       {selectedHotel && (
         <HotelModal
           hotel={selectedHotel}

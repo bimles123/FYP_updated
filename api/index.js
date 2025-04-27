@@ -11,6 +11,8 @@ require('dotenv').config();
 const User = require('./models/User');
 const Hotel = require('./models/Hotel');
 const Message = require('./models/Message');
+const Booking = require('./models/Booking');
+
 
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(12);
@@ -233,6 +235,119 @@ app.get('/api/chatted-users/:userId', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch chatted users' });
     }
 });
+
+//Bookings
+
+app.post('/api/bookings', async (req, res) => {
+    const { hotelId, userId, checkIn, checkOut } = req.body;
+
+    try {
+        const existingBooking = await Booking.findOne({
+            hotel: hotelId,
+            user: userId,
+            $or: [
+                { checkIn: { $lte: checkOut }, checkOut: { $gte: checkIn } }
+            ]
+        });
+
+        if (existingBooking) {
+            return res.status(400).json({ error: 'You already have a booking that overlaps with this range.' });
+        }
+
+        const hotel = await Hotel.findById(hotelId);
+        if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
+
+        const newBooking = await Booking.create({
+            hotel: hotelId,
+            user: userId,
+            checkIn,
+            checkOut
+        });
+
+        res.json(newBooking);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Booking failed.' });
+    }
+});
+
+
+
+//My bookings and listing
+
+app.get('/api/my-bookings/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const myBookings = await Booking.find({ user: userId }).populate('hotel');
+        const listedHotels = await Hotel.find({ user: userId }).select('_id');
+        const hotelIds = listedHotels.map(h => h._id);
+        const bookingsForMyHotels = await Booking.find({ hotel: { $in: hotelIds } }).populate('hotel').populate('user');
+
+        res.json({
+            myBookings,
+            bookingsForMyHotels
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to load booking data' });
+    }
+});
+
+// Accept
+app.put('/api/bookings/:id/accept', async (req, res) => {
+    try {
+        const updated = await Booking.findByIdAndUpdate(
+            req.params.id,
+            { status: 'accepted' },
+            { new: true }
+        ).populate('user').populate('hotel');
+
+        await Message.create({
+            sender: updated.hotel.user,
+            receiver: updated.user._id,
+            message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.`,
+        });
+
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to accept booking' });
+    }
+});
+
+// Reject
+app.put('/api/bookings/:id/cancel', async (req, res) => {
+    try {
+        const updated = await Booking.findByIdAndUpdate(
+            req.params.id,
+            { status: 'rejected' },
+            { new: true }
+        ).populate('user').populate('hotel');
+
+        await Message.create({
+            sender: updated.hotel.user,
+            receiver: updated.user._id,
+            message: `❌ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been rejected.`,
+        });
+
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to cancel booking' });
+    }
+});
+
+
+  // Clear a booking by ID (for user's own booking notifications)
+app.delete('/api/bookings/:id/clear', async (req, res) => {
+    try {
+        await Booking.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Booking cleared successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to clear booking' });
+    }
+});
+
+  
+  
 
 /* ========== SERVER ========== */
 

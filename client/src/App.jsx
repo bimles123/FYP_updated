@@ -9,52 +9,60 @@ import AddHotelPage from './assets/pages/AddHotelPage.jsx';
 import CategoryPage from './assets/pages/CategoryPage.jsx';
 import Layout from './Layout.jsx';
 import ChatPage from './assets/pages/ChatPage.jsx';
-import UserProfilePage from './assets/pages/UserProfilePage.jsx'; // ✅ Import new page
+import UserProfilePage from './assets/pages/UserProfilePage.jsx';
 import HotelDetailPage from './assets/pages/HotelDetailPage.jsx';
+import MyBookings from './assets/pages/MyBookings.jsx';
 
 import axios from 'axios';
-
 axios.defaults.baseURL = 'http://localhost:4000';
 
 function App() {
-    const navigate = useNavigate();
-    const [isAuthenticated, setIsAuthenticated] = useState(() => {
-        return localStorage.getItem('token') ? true : false;
-    });
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('token') ? true : false;
+  });
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsAuthenticated(true);
-        } else {
-            setIsAuthenticated(false);
-        }
-    }, [isAuthenticated]);
+  const [searchValue, setSearchValue] = useState(""); // 👈 shared search input state
 
-    const handleLogout = async () => {
-        console.log("Logout Clicked");
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        navigate('/login', { replace: true });
-    };
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, [isAuthenticated]);
 
-    return (
-        <Routes>
-            <Route path="/" element={<Layout />}> 
-                <Route index element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
-                <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/add-hotel" element={isAuthenticated ? <AddHotelPage /> : <Navigate to="/login" />} />
-                <Route path="/home" element={isAuthenticated ? <HomePage /> : <Navigate to="/login" />} />
-                <Route path="/category" element={isAuthenticated ? <CategoryPage /> : <Navigate to="/login" />} />
-                <Route path="/index" element={<IndexPage />} />
-                <Route path="/chat" element={<ChatPage />} />
-                <Route path="/user/:userId" element={isAuthenticated ? <UserProfilePage /> : <Navigate to="/login" />} /> {/* ✅ New */}
-                <Route path="/hotel/:id" element={<HotelDetailPage />} />
+  const handleLogout = async () => {
+    console.log("Logout Clicked");
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    navigate('/login', { replace: true });
+  };
 
-            </Route>
-        </Routes>
-    );
+  return (
+    <Routes>
+      <Route path="/" element={<Layout searchValue={searchValue} setSearchValue={setSearchValue} />}>
+        <Route index element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
+        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/add-hotel" element={isAuthenticated ? <AddHotelPage /> : <Navigate to="/login" />} />
+        <Route
+          path="/home"
+          element={isAuthenticated ? <HomePage searchValue={searchValue} /> : <Navigate to="/login" />}
+        />
+        <Route path="/category" element={isAuthenticated ? <CategoryPage /> : <Navigate to="/login" />} />
+        <Route path="/index" element={<IndexPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route
+          path="/user/:userId"
+          element={isAuthenticated ? <UserProfilePage /> : <Navigate to="/login" />}
+        />
+        <Route path="/hotel/:id" element={<HotelDetailPage />} />
+        <Route path="/mybookings" element={<MyBookings />} />
+      </Route>
+    </Routes>
+  );
 }
 
 export default App;
