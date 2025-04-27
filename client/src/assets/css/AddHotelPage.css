@@ -99,6 +99,28 @@
   border-color: #3498db;
 }
 
+/* ✅ Description Textarea Styling */
+.add-hotel-form textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 16px;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #f8fafc;
+  color: #2c3e50;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.add-hotel-form textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  background-color: #fff;
+}
+
 .preview-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -182,4 +204,3 @@
     padding: 12px 16px;
   }
 }
-

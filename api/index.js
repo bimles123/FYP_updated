@@ -1,3 +1,4 @@
+// Required modules
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -8,357 +9,390 @@ const multer = require('multer');
 const path = require('path');
 require('dotenv').config();
 
+// Models
 const User = require('./models/User');
 const Hotel = require('./models/Hotel');
 const Message = require('./models/Message');
 const Booking = require('./models/Booking');
 
-
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(12);
 const jwtSecret = 'fasd213gfuad34yhgy5i3u';
 
+// Middleware setup
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-    credentials: true,
-    origin: 'http://localhost:5173',
-}));
+app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer setup for uploads
+// Multer config for file uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, unique + '-' + file.originalname);
-    },
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + '-' + file.originalname);
+  },
 });
 const upload = multer({ storage });
 
 // Upload route
 app.post('/api/upload', upload.array('media', 10), (req, res) => {
+  try {
     const files = req.files.map(file => ({
-        type: file.mimetype.startsWith('video') ? 'video' : 'image',
-        url: `http://localhost:4000/uploads/${file.filename}`
+      type: file.mimetype.startsWith('video') ? 'video' : 'image',
+      url: `http://localhost:4000/uploads/${file.filename}`
     }));
     res.json(files);
+  } catch (error) {
+    console.error("Error uploading media:", error);
+    res.status(500).json({ error: 'Error uploading media', details: error.message });
+  }
 });
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((error) => console.error('MongoDB connection error:', error));
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((error) => console.error('MongoDB connection error:', error));
 
 /* ========== HOTEL ROUTES ========== */
 
+// Get all hotels
 app.get('/api/hotels', async (req, res) => {
-    try {
-        const hotels = await Hotel.find().populate('user', 'name');
-        res.json(hotels);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch hotels' });
-    }
+  try {
+    const hotels = await Hotel.find().populate('user', 'name');
+    res.json(hotels);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch hotels' });
+  }
 });
 
+// Create a hotel
 app.post('/api/hotels', async (req, res) => {
-    const { name, location, pricePerNight, rating, image, user, description, media } = req.body;
-    try {
-        const hotel = await Hotel.create({ name, location, pricePerNight, rating, image, user, description, media });
-        res.json(hotel);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to add hotel' });
-    }
+  const { name, location, pricePerNight, stars, image, user, description, media } = req.body;
+  try {
+    const hotel = await Hotel.create({
+      name,
+      location,
+      pricePerNight,
+      stars,
+      image,
+      user,
+      description,
+      media
+    });
+    res.json(hotel);
+  } catch (error) {
+    console.error("Error creating hotel:", error);
+    res.status(500).json({ error: 'Failed to add hotel', details: error.message });
+  }
 });
 
+// Get a single hotel by ID
 app.get('/api/hotels/:id', async (req, res) => {
-    try {
-        const hotel = await Hotel.findById(req.params.id).populate('user', 'name');
-        if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
-        res.json(hotel);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch hotel details' });
-    }
+  try {
+    const hotel = await Hotel.findById(req.params.id).populate('user', 'name');
+    if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
+    res.json(hotel);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch hotel details' });
+  }
 });
 
+// Update hotel details
 app.put('/api/hotels/:id', async (req, res) => {
-    const { id } = req.params;
-    const { name, location, pricePerNight, rating, image, description, media } = req.body;
-    try {
-        const updatedHotel = await Hotel.findByIdAndUpdate(
-            id,
-            { name, location, pricePerNight, rating, image, description, media },
-            { new: true }
-        ).populate('user', 'name');
-        res.json(updatedHotel);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to update hotel' });
-    }
+  const { id } = req.params;
+  const { name, location, pricePerNight, stars, image, description, media } = req.body;
+  try {
+    const updatedHotel = await Hotel.findByIdAndUpdate(
+      id,
+      { name, location, pricePerNight, stars, image, description, media },
+      { new: true }
+    ).populate('user', 'name');
+    res.json(updatedHotel);
+  } catch (err) {
+    console.error("Error updating hotel:", err);
+    res.status(500).json({ error: 'Failed to update hotel', details: err.message });
+  }
 });
 
+// Delete a hotel
 app.delete('/api/hotels/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await Hotel.findByIdAndDelete(id);
-        res.json({ message: 'Hotel deleted successfully' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to delete hotel' });
-    }
+  const { id } = req.params;
+  try {
+    await Hotel.findByIdAndDelete(id);
+    res.json({ message: 'Hotel deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete hotel' });
+  }
 });
 
-/* ========== AUTH ROUTES ========== */
+// Add media to a hotel (with logging and validation)
+app.post('/api/hotels/:id/media', async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    console.log("Incoming media upload:", req.body.media);
 
+    if (!Array.isArray(req.body.media)) {
+      return res.status(400).json({ error: "Media must be an array" });
+    }
+
+    hotel.media.push(...req.body.media);
+    await hotel.save();
+    res.json(hotel);
+  } catch (err) {
+    console.error("Failed to add media:", err);
+    res.status(500).json({ error: 'Failed to add media', details: err.message });
+  }
+});
+
+// Delete media from hotel by index
+app.delete('/api/hotels/:hotelId/media/:index', async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.hotelId);
+    hotel.media.splice(req.params.index, 1);
+    await hotel.save();
+    res.json(hotel);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete media' });
+  }
+});
+
+// ========== AUTH ROUTES ==========
+
+// Register user
 app.post('/register', async (req, res) => {
-    const { name, email, password } = req.body;
-    try {
-        const userDoc = await User.create({
-            name,
-            email,
-            password: bcrypt.hashSync(password, bcryptSalt),
-        });
-        res.json(userDoc);
-    } catch (e) {
-        res.status(422).json(e);
-    }
+  const { name, email, password } = req.body;
+  try {
+    const userDoc = await User.create({
+      name,
+      email,
+      password: bcrypt.hashSync(password, bcryptSalt),
+    });
+    res.json(userDoc);
+  } catch (e) {
+    res.status(422).json(e);
+  }
 });
 
+// Login user
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const userDoc = await User.findOne({ email });
-    if (userDoc) {
-        const passOk = bcrypt.compareSync(password, userDoc.password);
-        if (passOk) {
-            jwt.sign({ email: userDoc.email, id: userDoc._id, name: userDoc.name }, jwtSecret, {}, (err, token) => {
-                if (err) throw err;
-                res.cookie('token', token, { httpOnly: true }).json({
-                    token,
-                    id: userDoc._id,
-                    name: userDoc.name,
-                    email: userDoc.email,
-                });
-            });
-        } else {
-            res.status(422).json({ error: 'Invalid password' });
-        }
-    } else {
-        res.status(404).json({ error: 'User not found' });
-    }
-});
-
-app.get('/profile', (req, res) => {
-    const { token } = req.cookies;
-    if (token) {
-        jwt.verify(token, jwtSecret, {}, (err, userData) => {
-            if (err) return res.status(403).json('Invalid token');
-            res.json(userData);
+  const { email, password } = req.body;
+  const userDoc = await User.findOne({ email });
+  if (userDoc) {
+    const passOk = bcrypt.compareSync(password, userDoc.password);
+    if (passOk) {
+      jwt.sign({ email: userDoc.email, id: userDoc._id, name: userDoc.name }, jwtSecret, {}, (err, token) => {
+        if (err) throw err;
+        res.cookie('token', token, { httpOnly: true }).json({
+          token,
+          id: userDoc._id,
+          name: userDoc.name,
+          email: userDoc.email,
         });
+      });
     } else {
-        res.status(401).json('Not authenticated');
+      res.status(422).json({ error: 'Invalid password' });
     }
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
 });
 
-/* ========== CHAT ROUTES ========== */
+// Get profile from cookie token
+app.get('/profile', (req, res) => {
+  const { token } = req.cookies;
+  if (token) {
+    jwt.verify(token, jwtSecret, {}, (err, userData) => {
+      if (err) return res.status(403).json('Invalid token');
+      res.json(userData);
+    });
+  } else {
+    res.status(401).json('Not authenticated');
+  }
+});
+
+// ========== CHAT ROUTES ==========
 
 // Get all users
 app.get('/api/users', async (req, res) => {
-    try {
-        const users = await User.find({}, '_id name email');
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch users' });
-    }
+  try {
+    const users = await User.find({}, '_id name email');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
 });
 
-// Send a message
+// Send message
 app.post('/api/messages', async (req, res) => {
-    const { senderId, receiverId, message } = req.body;
-    try {
-        const newMessage = await Message.create({ sender: senderId, receiver: receiverId, message });
-        res.json(newMessage);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to send message' });
-    }
+  const { senderId, receiverId, message } = req.body;
+  try {
+    const newMessage = await Message.create({ sender: senderId, receiver: receiverId, message });
+    res.json(newMessage);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to send message' });
+  }
 });
 
 // Get messages between two users
 app.get('/api/messages/:user1/:user2', async (req, res) => {
-    const { user1, user2 } = req.params;
-    try {
-        const messages = await Message.find({
-            $or: [
-                { sender: user1, receiver: user2 },
-                { sender: user2, receiver: user1 }
-            ]
-        }).sort({ timestamp: 1 });
-        res.json(messages);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch messages' });
-    }
+  const { user1, user2 } = req.params;
+  try {
+    const messages = await Message.find({
+      $or: [
+        { sender: user1, receiver: user2 },
+        { sender: user2, receiver: user1 }
+      ]
+    }).sort({ timestamp: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
 });
 
-// Delete chat between two users
+// Delete messages between two users
 app.delete('/api/messages/:user1/:user2', async (req, res) => {
-    const { user1, user2 } = req.params;
-    try {
-        await Message.deleteMany({
-            $or: [
-                { sender: user1, receiver: user2 },
-                { sender: user2, receiver: user1 }
-            ]
-        });
-        res.json({ message: 'Chat deleted successfully' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to delete chat' });
-    }
+  const { user1, user2 } = req.params;
+  try {
+    await Message.deleteMany({
+      $or: [
+        { sender: user1, receiver: user2 },
+        { sender: user2, receiver: user1 }
+      ]
+    });
+    res.json({ message: 'Chat deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete chat' });
+  }
 });
 
-// Get users the current user has chatted with
+// Get users chatted with
 app.get('/api/chatted-users/:userId', async (req, res) => {
-    const { userId } = req.params;
-    try {
-        const messages = await Message.find({
-            $or: [
-                { sender: userId },
-                { receiver: userId }
-            ]
-        });
+  const { userId } = req.params;
+  try {
+    const messages = await Message.find({
+      $or: [
+        { sender: userId },
+        { receiver: userId }
+      ]
+    });
 
-        const userIds = new Set();
-        messages.forEach(msg => {
-            if (msg.sender.toString() !== userId) userIds.add(msg.sender.toString());
-            if (msg.receiver.toString() !== userId) userIds.add(msg.receiver.toString());
-        });
+    const userIds = new Set();
+    messages.forEach(msg => {
+      if (msg.sender.toString() !== userId) userIds.add(msg.sender.toString());
+      if (msg.receiver.toString() !== userId) userIds.add(msg.receiver.toString());
+    });
 
-        const users = await User.find({ _id: { $in: Array.from(userIds) } }, '_id name email');
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch chatted users' });
-    }
+    const users = await User.find({ _id: { $in: Array.from(userIds) } }, '_id name email');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch chatted users' });
+  }
 });
 
-//Bookings
+// ========== BOOKINGS ROUTES ==========
 
+// Book a hotel
 app.post('/api/bookings', async (req, res) => {
-    const { hotelId, userId, checkIn, checkOut } = req.body;
+  const { hotelId, userId, checkIn, checkOut } = req.body;
+  try {
+    const existingBooking = await Booking.findOne({
+      hotel: hotelId,
+      user: userId,
+      $or: [
+        { checkIn: { $lte: checkOut }, checkOut: { $gte: checkIn } }
+      ]
+    });
 
-    try {
-        const existingBooking = await Booking.findOne({
-            hotel: hotelId,
-            user: userId,
-            $or: [
-                { checkIn: { $lte: checkOut }, checkOut: { $gte: checkIn } }
-            ]
-        });
-
-        if (existingBooking) {
-            return res.status(400).json({ error: 'You already have a booking that overlaps with this range.' });
-        }
-
-        const hotel = await Hotel.findById(hotelId);
-        if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
-
-        const newBooking = await Booking.create({
-            hotel: hotelId,
-            user: userId,
-            checkIn,
-            checkOut
-        });
-
-        res.json(newBooking);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Booking failed.' });
+    if (existingBooking) {
+      return res.status(400).json({ error: 'You already have a booking that overlaps with this range.' });
     }
+
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
+
+    const newBooking = await Booking.create({ hotel: hotelId, user: userId, checkIn, checkOut });
+    res.json(newBooking);
+  } catch (err) {
+    res.status(500).json({ error: 'Booking failed.' });
+  }
 });
 
-
-
-//My bookings and listing
-
+// Get bookings for a user (made and received)
 app.get('/api/my-bookings/:userId', async (req, res) => {
-    const { userId } = req.params;
-    try {
-        const myBookings = await Booking.find({ user: userId }).populate('hotel');
-        const listedHotels = await Hotel.find({ user: userId }).select('_id');
-        const hotelIds = listedHotels.map(h => h._id);
-        const bookingsForMyHotels = await Booking.find({ hotel: { $in: hotelIds } }).populate('hotel').populate('user');
-
-        res.json({
-            myBookings,
-            bookingsForMyHotels
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to load booking data' });
-    }
+  const { userId } = req.params;
+  try {
+    const myBookings = await Booking.find({ user: userId }).populate('hotel');
+    const listedHotels = await Hotel.find({ user: userId }).select('_id');
+    const hotelIds = listedHotels.map(h => h._id);
+    const bookingsForMyHotels = await Booking.find({ hotel: { $in: hotelIds } }).populate('hotel').populate('user');
+    res.json({ myBookings, bookingsForMyHotels });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load booking data' });
+  }
 });
 
-// Accept
+// Accept booking
 app.put('/api/bookings/:id/accept', async (req, res) => {
-    try {
-        const updated = await Booking.findByIdAndUpdate(
-            req.params.id,
-            { status: 'accepted' },
-            { new: true }
-        ).populate('user').populate('hotel');
+  try {
+    const updated = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status: 'accepted' },
+      { new: true }
+    ).populate('user').populate('hotel');
 
-        await Message.create({
-            sender: updated.hotel.user,
-            receiver: updated.user._id,
-            message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.`,
-        });
+    await Message.create({
+      sender: updated.hotel.user,
+      receiver: updated.user._id,
+      message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.`
+    });
 
-        res.json(updated);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to accept booking' });
-    }
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to accept booking' });
+  }
 });
 
-// Reject
+// Cancel booking
 app.put('/api/bookings/:id/cancel', async (req, res) => {
-    try {
-        const updated = await Booking.findByIdAndUpdate(
-            req.params.id,
-            { status: 'rejected' },
-            { new: true }
-        ).populate('user').populate('hotel');
+  try {
+    const updated = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status: 'rejected' },
+      { new: true }
+    ).populate('user').populate('hotel');
 
-        await Message.create({
-            sender: updated.hotel.user,
-            receiver: updated.user._id,
-            message: `❌ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been rejected.`,
-        });
+    await Message.create({
+      sender: updated.hotel.user,
+      receiver: updated.user._id,
+      message: `❌ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been rejected.`
+    });
 
-        res.json(updated);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to cancel booking' });
-    }
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to cancel booking' });
+  }
 });
 
-
-  // Clear a booking by ID (for user's own booking notifications)
+// Clear a booking
 app.delete('/api/bookings/:id/clear', async (req, res) => {
-    try {
-        await Booking.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Booking cleared successfully' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to clear booking' });
-    }
+  try {
+    await Booking.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Booking cleared successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear booking' });
+  }
 });
-
-  
-  
 
 /* ========== SERVER ========== */
-
 const PORT = 4000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use.`);
-        process.exit(1);
-    } else {
-        console.error('Server error:', err);
-    }
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use.`);
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+  }
 });

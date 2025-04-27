@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 const UserProfilePage = () => {
@@ -54,7 +54,6 @@ const UserProfilePage = () => {
       const updated = userHotels.map(h =>
         h._id === hotelId ? { ...res.data, user: h.user } : h
       );
-      
       setUserHotels(updated);
       setEditingHotelId(null);
     } catch (err) {
@@ -125,11 +124,11 @@ const UserProfilePage = () => {
                   <input
                     type="number"
                     className="w-full mb-2 p-2 border rounded"
-                    value={editedHotel.rating}
-                    onChange={(e) => setEditedHotel({ ...editedHotel, rating: e.target.value })}
+                    value={editedHotel.stars}
+                    onChange={(e) => setEditedHotel({ ...editedHotel, stars: e.target.value })}
                     min={1}
                     max={5}
-                    step={0.1}
+                    step={1}
                   />
                   <input
                     type="text"
@@ -162,15 +161,26 @@ const UserProfilePage = () => {
                   <h3 className="text-lg font-semibold">{hotel.name}</h3>
                   <p><strong>Location:</strong> {hotel.location}</p>
                   <p><strong>Price:</strong> ${hotel.pricePerNight}</p>
-                  <p><strong>Rating:</strong> {hotel.rating} Stars</p>
+                  <p><strong>Status:</strong> {hotel.stars} Star</p>
                   <p><strong>Description:</strong> {hotel.description || "No description."}</p>
-                  {currentUser?.id === hotel.user?._id && (
-                  <div className="flex gap-4 mt-2">
-                    <button onClick={() => startEdit(hotel)} className="text-blue-600 text-sm hover:underline">Edit</button>
-                    <button onClick={() => deleteHotel(hotel._id)} className="text-red-600 text-sm hover:underline">Delete</button>
-                  </div>
-                  )}
 
+                  {/* Redirect Link with Arrow Icon */}
+                  <Link
+                    to={`/hotel/${hotel._id}`}
+                    className="text-blue-500 flex items-center gap-1 mt-2 hover:underline"
+                  >
+                    View Hotel
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+
+                  {currentUser?.id === hotel.user?._id && (
+                    <div className="flex gap-4 mt-2">
+                      <button onClick={() => startEdit(hotel)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                      <button onClick={() => deleteHotel(hotel._id)} className="text-red-600 text-sm hover:underline">Delete</button>
+                    </div>
+                  )}
                 </>
               )}
             </div>

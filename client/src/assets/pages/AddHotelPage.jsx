@@ -9,7 +9,8 @@ const AddHotelPage = () => {
   const [name, setName] = useState("")
   const [location, setLocation] = useState("")
   const [pricePerNight, setPricePerNight] = useState("")
-  const [rating, setRating] = useState("")
+  const [stars, setStars] = useState("")
+  const [description, setDescription] = useState("")
   const [image, setImage] = useState("")
   const [mediaFiles, setMediaFiles] = useState([])
   const [mediaPreviews, setMediaPreviews] = useState([])
@@ -31,7 +32,6 @@ const AddHotelPage = () => {
     setIsSubmitting(true)
 
     try {
-      // Upload media files to server
       const formData = new FormData()
       mediaFiles.forEach((file) => formData.append("media", file))
 
@@ -39,14 +39,14 @@ const AddHotelPage = () => {
         headers: { "Content-Type": "multipart/form-data" },
       })
 
-      const uploadedMedia = uploadRes.data // array of { type, url }
+      const uploadedMedia = uploadRes.data
 
-      // Create hotel with uploaded media
       await axios.post("/api/hotels", {
         name,
         location,
         pricePerNight,
-        rating,
+        stars,
+        description,
         image,
         user: user.id,
         media: uploadedMedia,
@@ -56,7 +56,8 @@ const AddHotelPage = () => {
       setName("")
       setLocation("")
       setPricePerNight("")
-      setRating("")
+      setStars("")
+      setDescription("")
       setImage("")
       setMediaFiles([])
       setMediaPreviews([])
@@ -108,16 +109,26 @@ const AddHotelPage = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="rating">Rating (1-5)</label>
+            <label htmlFor="stars">Star Category (1-5 Star)</label>
             <input
               type="number"
-              id="rating"
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
+              id="stars"
+              value={stars}
+              onChange={(e) => setStars(e.target.value)}
               min="1"
               max="5"
-              step="0.1"
-              placeholder="4.5"
+              placeholder="e.g., 4"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="description">Hotel Description</label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe the hotel, its features, and amenities"
+              rows="4"
               required
             />
           </div>
@@ -155,4 +166,3 @@ const AddHotelPage = () => {
 }
 
 export default AddHotelPage
-
