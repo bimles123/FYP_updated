@@ -455,17 +455,26 @@ app.post('/api/messages', async (req, res) => {
 app.get('/api/messages/:user1/:user2', async (req, res) => {
   const { user1, user2 } = req.params;
   try {
+    // Fetch messages between the two users
     const messages = await Message.find({
       $or: [
         { sender: user1, receiver: user2 },
         { sender: user2, receiver: user1 }
       ]
     }).sort({ timestamp: 1 });
+    
+    // Mark messages received by user1 (current user) as read
+    await Message.updateMany(
+      { sender: user2, receiver: user1, isRead: false },
+      { $set: { isRead: true } }
+    );
+    
     res.json(messages);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
+
 
 // Delete messages between two users
 app.delete('/api/messages/:user1/:user2', async (req, res) => {
@@ -507,6 +516,41 @@ app.get('/api/chatted-users/:userId', async (req, res) => {
   }
 });
 
+//unread message
+
+app.get('/api/unread-messages/:userId', async (req, res) => {
+  try {
+    const messages = await Message.find({
+      receiver: req.params.userId,
+      isRead: false
+    })
+    .populate('sender', 'name email')
+    .sort({ timestamp: -1 })
+    .limit(10); // latest 10
+
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch unread messages' });
+  }
+});
+
+// Get all messages received by a user (for notifications)
+app.get('/api/messages/:userId', async (req, res) => {
+  try {
+    const messages = await Message.find({
+      receiver: req.params.userId
+    })
+    .populate('sender', 'name email')
+    .sort({ timestamp: -1 });
+
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch received messages' });
+  }
+});
+
+
+
 // ========== BOOKINGS ROUTES ==========
 
 // Book a hotel
@@ -529,6 +573,7 @@ app.post('/api/bookings', async (req, res) => {
     if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
 
     const newBooking = await Booking.create({ hotel: hotelId, user: userId, checkIn, checkOut });
+    
     res.json(newBooking);
   } catch (err) {
     res.status(500).json({ error: 'Booking failed.' });
@@ -567,7 +612,7 @@ app.put('/api/bookings/:id/accept', async (req, res) => {
     await Message.create({
       sender: updated.hotel.user,
       receiver: updated.user._id,
-      message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.\n\n💳 Please proceed to payment here: ${payNowLink}`
+      message: `✅ Your booking for "${updated.hotel.name}" from ${new Date(updated.checkIn).toDateString()} to ${new Date(updated.checkOut).toDateString()} has been accepted.\n\n💳 Please proceed to payment via bookings`
     });
 
     res.json(updated);

@@ -13,6 +13,7 @@ import UserProfilePage from './assets/pages/UserProfilePage.jsx';
 import HotelDetailPage from './assets/pages/HotelDetailPage.jsx';
 import MyBookings from './assets/pages/MyBookings.jsx';
 import AdminDashboard from './assets/pages/AdminDashboard.jsx';
+import Notification from './assets/pages/Notification.jsx';
 
 
 import axios from 'axios';
@@ -63,6 +64,7 @@ function App() {
         <Route path="/hotel/:id" element={<HotelDetailPage />} />
         <Route path="/mybookings" element={<MyBookings />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/notification" element={<Notification />} />
       </Route>
     </Routes>
   );

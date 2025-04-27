@@ -3,6 +3,8 @@ import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import axios from "axios"
 import "./assets/css/header.css"
+import { useNavigate } from "react-router-dom";
+
 
 export default function Header({ searchValue, setSearchValue }) {
   const location = useLocation()
@@ -76,6 +78,33 @@ export default function Header({ searchValue, setSearchValue }) {
     setIsSearching(false);
   };
 
+  const [unreadMessages, setUnreadMessages] = useState([]);
+const [showDropdown, setShowDropdown] = useState(false);
+const navigate = useNavigate();
+
+useEffect(() => {
+  const fetchNotifications = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user?.id) return;
+
+    try {
+      const res = await axios.get(`/api/unread-messages/${user.id}`);
+      setUnreadMessages(res.data);
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    }
+  };
+
+  fetchNotifications();
+  const interval = setInterval(fetchNotifications, 5000); // Refresh every 5s
+  return () => clearInterval(interval);
+}, []);
+
+
+
+
+
+  
   return (
     <>
       <header className="flex flex-col bg-white shadow-md fixed left-0 right-0 z-50">
@@ -165,7 +194,8 @@ export default function Header({ searchValue, setSearchValue }) {
 
         {!isAuthPage && (
           <div className="border-t border-gray-100 bg-white px-6 py-3 flex justify-between items-center">
-            <div className="flex gap-6 overflow-x-auto">
+            <div className="flex gap-6 flex-wrap items-center">
+
               <Link
                 to="/reachers"
                 className="px-3 py-1.5 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200 cursor-pointer font-medium flex items-center gap-1.5"
@@ -226,6 +256,17 @@ export default function Header({ searchValue, setSearchValue }) {
                 </svg>
                 Bookings
               </Link>
+
+              <Link to="/notification" className="relative px-3 py-1.5 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200 text-xl">
+                🔔
+                {unreadMessages.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {unreadMessages.length}
+                  </span>
+                )}
+              </Link>
+
+
 
               
 
