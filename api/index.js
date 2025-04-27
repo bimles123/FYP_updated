@@ -10,6 +10,9 @@ const path = require('path');
 const Report = require('./models/Report');
 const AuditLog = require('./models/AuditLog');
 
+
+
+
 require('dotenv').config();
 
 
@@ -24,11 +27,15 @@ const app = express();
 const bcryptSalt = bcrypt.genSaltSync(12);
 const jwtSecret = 'fasd213gfuad34yhgy5i3u';
 
+
 // Middleware setup
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+
 
 // Multer config for file uploads
 const storage = multer.diskStorage({
@@ -39,6 +46,9 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+
+
+
 
 // Upload route
 app.post('/api/upload', upload.array('media', 10), (req, res) => {
@@ -69,6 +79,8 @@ mongoose.connect(process.env.MONGO_URL)
     }
   }
   
+const esewaRoute = require('./esewaRoute');
+app.use('/api', esewaRoute);
 
 /* ========== HOTEL ROUTES ========== */
 
