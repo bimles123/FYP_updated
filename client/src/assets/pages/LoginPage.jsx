@@ -12,13 +12,14 @@ export default function LoginPage({ setIsAuthenticated }) {
         try {
             const response = await axios.post('/login', { email, password }, { withCredentials: true });
             if (response.status === 200) {
-                alert('Login Successful');
-                localStorage.setItem('token', response.data.token);
+                const { token, id, name, email } = response.data;
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify({ id, name, email }));
                 setIsAuthenticated(true);
                 navigate('/home');
             }
         } catch (e) {
-            alert(`Login failed: ${e.response ? e.response.data : e.message}`);
+            alert(`Login failed: ${e.response?.data?.error || e.message}`);
         }
     }
 
