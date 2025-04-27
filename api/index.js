@@ -539,7 +539,11 @@ app.post('/api/bookings', async (req, res) => {
 app.get('/api/my-bookings/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
-    const myBookings = await Booking.find({ user: userId }).populate('hotel');
+    const myBookings = await Booking.find({ user: userId }).populate({
+      path: 'hotel',
+      populate: { path: 'user', select: 'name email' }
+    });
+    
     const listedHotels = await Hotel.find({ user: userId }).select('_id');
     const hotelIds = listedHotels.map(h => h._id);
     const bookingsForMyHotels = await Booking.find({ hotel: { $in: hotelIds } }).populate('hotel').populate('user');

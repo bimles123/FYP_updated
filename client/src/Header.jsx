@@ -226,6 +226,9 @@ export default function Header({ searchValue, setSearchValue }) {
                 </svg>
                 Bookings
               </Link>
+
+              
+
             </div>
             <Link to="/category">
               <button className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors shadow-sm">

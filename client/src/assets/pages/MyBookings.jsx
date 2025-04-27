@@ -123,16 +123,39 @@ export default function MyBookings() {
   };
 
   useEffect(() => {
-    const handleFocus = () => {
+    const handleFocus = async () => {
       if (justPaidBookingId) {
         localStorage.setItem(`paid_${justPaidBookingId}`, JSON.stringify({ status: 'PAID' }));
         markPaidLocally(justPaidBookingId);
+  
+        try {
+          const res = await axios.get(`/api/my-bookings/${currentUser.id}`);
+          setMyBookings(res.data.myBookings);
+          setReceivedBookings(res.data.bookingsForMyHotels);
+  
+          const paidBooking = res.data.myBookings.find(b => b._id === justPaidBookingId);
+          if (paidBooking && paidBooking.hotel?.user?._id) {
+            await axios.post("/api/messages", {
+              senderId: paidBooking.hotel.user._id,
+              receiverId: currentUser.id,
+              message: `💰 Payment received for your booking at "${paidBooking.hotel.name}". Thank you!`
+            });
+            console.log("✅ Payment message sent.");
+          } else {
+            console.warn("⚠️ Booking not found or hotel.user missing");
+          }
+        } catch (err) {
+          console.error("❌ Error sending payment confirmation:", err);
+        }
+  
         setJustPaidBookingId(null);
       }
     };
+  
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [justPaidBookingId]);
+  }, [justPaidBookingId, currentUser]);
+  
 
   return (
     <div className="max-w-5xl mx-auto mt-20 p-4">
