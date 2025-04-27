@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const path = require('path');
 const Report = require('./models/Report');
+const AuditLog = require('./models/AuditLog');
+
 require('dotenv').config();
 
 
@@ -56,6 +58,17 @@ app.post('/api/upload', upload.array('media', 10), (req, res) => {
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('MongoDB connection error:', error));
+
+
+//recent
+  async function logAction({ action, user, targetType, targetId, details = {} }) {
+    try {
+      await AuditLog.create({ action, user, targetType, targetId, details });
+    } catch (err) {
+      console.error('Audit log failed:', err);
+    }
+  }
+  
 
 /* ========== HOTEL ROUTES ========== */
 
@@ -120,14 +133,101 @@ app.put('/api/hotels/:id', async (req, res) => {
 
 // Delete a hotel
 app.delete('/api/hotels/:id', async (req, res) => {
-  const { id } = req.params;
+  const hotelId = req.params.id;
+  const userId = req.body.userId; // <- must be passed from frontend
+
   try {
-    await Hotel.findByIdAndDelete(id);
-    res.json({ message: 'Hotel deleted successfully' });
+    const futureBooking = await Booking.findOne({
+      hotel: hotelId,
+      checkOut: { $gte: new Date() },
+      status: { $in: ['pending', 'accepted'] },
+    });
+
+    if (futureBooking) {
+      return res.status(403).json({ error: 'Cannot delete hotel with active/future bookings.' });
+    }
+
+    await Hotel.findByIdAndUpdate(hotelId, { isDeleted: true });
+
+    await logAction({
+      action: 'soft-delete-hotel',
+      user: userId,
+      targetType: 'Hotel',
+      targetId: hotelId,
+      details: { reason: 'Deleted by user, no active bookings' }
+    });
+
+    res.json({ message: 'Hotel marked as deleted (soft deleted).' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete hotel' });
   }
 });
+
+//admin restore hotel
+
+app.put('/api/admin/restore-hotel/:id', async (req, res) => {
+  try {
+    const updated = await Hotel.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: false },
+      { new: true }
+    ).populate('user'); // <-- important
+
+    await logAction({
+      action: "restore-hotel",
+      user: req.body.adminId,
+      targetType: "Hotel",
+      targetId: updated._id,
+      details: { name: updated.name }
+    });
+
+    // ✅ Send message to hotel owner
+    await Message.create({
+      sender: req.body.adminId,
+      receiver: updated.user._id,
+      message: `✅ Your hotel "${updated.name}" has been restored by admin.`
+    });
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to restore hotel" });
+  }
+});
+
+
+
+//admin delete hotel
+
+app.delete('/api/admin/permanent-delete-hotel/:id', async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id).populate('user');
+    if (!hotel) return res.status(404).json({ error: "Hotel not found" });
+
+    await hotel.deleteOne();
+
+    await logAction({
+      action: "permanent-delete-hotel",
+      user: req.body.adminId,
+      targetType: "Hotel",
+      targetId: hotel._id,
+      details: { name: hotel.name }
+    });
+
+    // ✅ Send message to hotel owner
+    await Message.create({
+      sender: req.body.adminId,
+      receiver: hotel.user._id,
+      message: `❌ Your hotel "${hotel.name}" has been permanently deleted by admin.`
+    });
+
+    res.json({ message: "Hotel permanently deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to permanently delete hotel" });
+  }
+});
+
+
+
 
 // Add media to a hotel (with logging and validation)
 app.post('/api/hotels/:id/media', async (req, res) => {
@@ -470,6 +570,39 @@ app.delete('/api/bookings/:id/clear', async (req, res) => {
     res.status(500).json({ error: 'Failed to clear booking' });
   }
 });
+
+//hotel status
+
+app.put('/api/hotels/:id/status', async (req, res) => {
+  const { isActive, userId } = req.body;
+  const { id } = req.params;
+
+  try {
+    await Hotel.findByIdAndUpdate(id, { isActive });
+    await logAction({
+      action: isActive ? 'activated-hotel' : 'deactivated-hotel',
+      user: userId,
+      targetType: 'Hotel',
+      targetId: id,
+    });
+    res.json({ message: `Hotel ${isActive ? 'activated' : 'deactivated'} successfully.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+//log for admin
+app.get('/api/admin/logs', async (req, res) => {
+  try {
+    const logs = await AuditLog.find()
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+});
+
 
 /* ========== SERVER ========== */
 const PORT = 4000;

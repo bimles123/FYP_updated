@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const HotelSchema = new mongoose.Schema({
+
+  isDeleted: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true },
+
   name: {
     type: String,
     required: true

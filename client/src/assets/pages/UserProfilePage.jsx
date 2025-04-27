@@ -26,12 +26,13 @@ const UserProfilePage = () => {
     const fetchHotelsByUser = async () => {
       try {
         const res = await axios.get("/api/hotels");
-        const filtered = res.data.filter(hotel => hotel.user?._id === userId);
+        const filtered = res.data.filter(hotel => hotel.user?._id === userId && !hotel.isDeleted); // ✅ updated here
         setUserHotels(filtered);
       } catch (err) {
         console.error("Failed to fetch user hotels:", err);
       }
     };
+    
 
     fetchUser();
     fetchHotelsByUser();
@@ -65,7 +66,9 @@ const UserProfilePage = () => {
   const deleteHotel = async (hotelId) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
     try {
-      await axios.delete(`/api/hotels/${hotelId}`);
+      await axios.delete(`/api/hotels/${hotelId}`, {
+        data: { userId: currentUser.id }  // ✅ added userId for audit logging
+      });
       setUserHotels(userHotels.filter(h => h._id !== hotelId));
     } catch (err) {
       console.error("Failed to delete hotel:", err);
@@ -164,7 +167,6 @@ const UserProfilePage = () => {
                   <p><strong>Status:</strong> {hotel.stars} Star</p>
                   <p><strong>Description:</strong> {hotel.description || "No description."}</p>
 
-                  {/* Redirect Link with Arrow Icon */}
                   <Link
                     to={`/hotel/${hotel._id}`}
                     className="text-blue-500 flex items-center gap-1 mt-2 hover:underline"

@@ -22,20 +22,23 @@ const HomePage = ({ searchValue }) => {
 
   const handleNextHotel = () => {
     if (!selectedHotel) return;
-    const currentIndex = hotels.findIndex(hotel => hotel._id === selectedHotel._id);
-    const nextIndex = (currentIndex + 1) % hotels.length;
-    setSelectedHotel(hotels[nextIndex]);
+    const currentIndex = visibleHotels.findIndex(hotel => hotel._id === selectedHotel._id);
+    const nextIndex = (currentIndex + 1) % visibleHotels.length;
+    setSelectedHotel(visibleHotels[nextIndex]);
   };
 
+  // ✅ Filter out soft-deleted hotels
+  const visibleHotels = hotels.filter(h => !h.isDeleted);
+
   // 🔍 Filter based on location search
-  const filteredHotels = hotels.filter(hotel =>
+  const filteredHotels = visibleHotels.filter(hotel =>
     hotel.location.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   return (
     <div className="homepage">
       <div className="hotel-list">
-        {(searchValue ? filteredHotels : hotels).map((hotel) => (
+        {(searchValue ? filteredHotels : visibleHotels).map((hotel) => (
           <div
             key={hotel._id}
             className="hotel-card"
