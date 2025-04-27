@@ -12,6 +12,7 @@ import ChatPage from './assets/pages/ChatPage.jsx';
 import UserProfilePage from './assets/pages/UserProfilePage.jsx';
 import HotelDetailPage from './assets/pages/HotelDetailPage.jsx';
 import MyBookings from './assets/pages/MyBookings.jsx';
+import AdminDashboard from './assets/pages/AdminDashboard.jsx';
 
 import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:4000';
@@ -60,6 +61,7 @@ function App() {
         />
         <Route path="/hotel/:id" element={<HotelDetailPage />} />
         <Route path="/mybookings" element={<MyBookings />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Route>
     </Routes>
   );

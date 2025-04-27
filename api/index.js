@@ -7,7 +7,10 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const path = require('path');
+const Report = require('./models/Report');
 require('dotenv').config();
+
+
 
 // Models
 const User = require('./models/User');
@@ -157,16 +160,86 @@ app.delete('/api/hotels/:hotelId/media/:index', async (req, res) => {
   }
 });
 
+//Report to admin
+
+app.post('/api/report-hotel', async (req, res) => {
+  const { hotelId, reporterId, reason, details } = req.body;
+
+  try {
+    const report = await Report.create({
+      hotel: hotelId,
+      reporter: reporterId,
+      reason,
+      details
+    });
+
+    res.json({ success: true, message: 'Report submitted to admin.', report });
+  } catch (err) {
+    console.error("Error reporting hotel:", err);
+    res.status(500).json({ error: 'Failed to send report' });
+  }
+});
+
+
+
+//fetch admin message
+
+app.get('/api/messages-to-admin/:adminId', async (req, res) => {
+  try {
+    const messages = await Message.find({ receiver: req.params.adminId })
+      .populate('sender', 'name email')
+      .sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    console.error("Error fetching admin messages:", err);
+    res.status(500).json({ error: 'Failed to load messages' });
+  }
+});
+
+// Get all hotel reports (admin use)
+app.get('/api/admin/reports', async (req, res) => {
+  try {
+    const reports = await Report.find()
+      .populate('reporter', 'name email')
+      .populate('hotel', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json(reports);
+  } catch (err) {
+    console.error("Failed to load reports", err);
+    res.status(500).json({ error: 'Could not fetch reports' });
+  }
+});
+
+// Delete a report (admin use)
+app.delete('/api/admin/reports/:id', async (req, res) => {
+  try {
+    await Report.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Report cleared successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete report' });
+  }
+});
+
+
+
 // ========== AUTH ROUTES ==========
 
 // Register user
 app.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, adminCode } = req.body;
+
+  let role = 'user';
+  if (adminCode && adminCode === process.env.ADMIN_SECRET) {
+    role = 'admin';
+  }
+
   try {
     const userDoc = await User.create({
       name,
       email,
       password: bcrypt.hashSync(password, bcryptSalt),
+      role,
     });
     res.json(userDoc);
   } catch (e) {
@@ -174,22 +247,35 @@ app.post('/register', async (req, res) => {
   }
 });
 
+
 // Login user
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const userDoc = await User.findOne({ email });
+
   if (userDoc) {
     const passOk = bcrypt.compareSync(password, userDoc.password);
     if (passOk) {
-      jwt.sign({ email: userDoc.email, id: userDoc._id, name: userDoc.name }, jwtSecret, {}, (err, token) => {
-        if (err) throw err;
-        res.cookie('token', token, { httpOnly: true }).json({
-          token,
+      jwt.sign(
+        {
+          email: userDoc.email,
           id: userDoc._id,
           name: userDoc.name,
-          email: userDoc.email,
-        });
-      });
+          role: userDoc.role,
+        },
+        jwtSecret,
+        {},
+        (err, token) => {
+          if (err) throw err;
+          res.cookie('token', token, { httpOnly: true }).json({
+            token,
+            id: userDoc._id,
+            name: userDoc.name,
+            email: userDoc.email,
+            role: userDoc.role,
+          });
+        }
+      );
     } else {
       res.status(422).json({ error: 'Invalid password' });
     }
@@ -197,6 +283,7 @@ app.post('/login', async (req, res) => {
     res.status(404).json({ error: 'User not found' });
   }
 });
+
 
 // Get profile from cookie token
 app.get('/profile', (req, res) => {

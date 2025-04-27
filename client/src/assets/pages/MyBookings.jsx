@@ -72,15 +72,21 @@ export default function MyBookings() {
         ) : (
           myBookings.map((b, i) => (
             <div key={i} className="border border-gray-200 bg-white rounded-lg shadow p-4 mb-4">
-              <div className="text-lg font-semibold text-gray-800">{b.hotel.name}</div>
-              <div className="text-sm text-gray-500">{b.hotel.location}</div>
+              <div className="text-lg font-semibold text-gray-800">
+                {b.hotel ? b.hotel.name : "❌ Hotel deleted - details unavailable"}
+              </div>
+              <div className="text-sm text-gray-500">
+                {b.hotel ? b.hotel.location : "Location unknown"}
+              </div>
               <div className="text-sm mt-1">
                 📅 Check-in: {new Date(b.checkIn).toDateString()}
               </div>
               <div className="text-sm">
                 📅 Check-out: {new Date(b.checkOut).toDateString()}
               </div>
-              <div className="text-sm mt-1 font-medium text-green-600 capitalize">Status: {b.status}</div>
+              <div className="text-sm mt-1 font-medium text-green-600 capitalize">
+                Status: {b.status}
+              </div>
               <button
                 onClick={() => handleClear(b._id)}
                 className="mt-3 bg-gray-200 hover:bg-gray-300 text-sm text-gray-700 px-3 py-1 rounded"
@@ -102,9 +108,11 @@ export default function MyBookings() {
             .filter(b => b.status === 'pending')
             .map((b, i) => (
               <div key={i} className="border border-gray-200 bg-white rounded-lg shadow p-4 mb-4">
-                <div className="text-lg font-semibold text-gray-800">{b.hotel.name}</div>
+                <div className="text-lg font-semibold text-gray-800">
+                  {b.hotel ? b.hotel.name : "❌ Hotel deleted - details unavailable"}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">
-                  👤 Booked by: {b.user.name} ({b.user.email})
+                  👤 Booked by: {b.user?.name || "Unknown"} ({b.user?.email || "Unknown"})
                 </div>
                 <div className="text-sm mt-1">
                   📅 Check-in: {new Date(b.checkIn).toDateString()}
@@ -112,7 +120,9 @@ export default function MyBookings() {
                 <div className="text-sm">
                   📅 Check-out: {new Date(b.checkOut).toDateString()}
                 </div>
-                <div className="text-sm mt-1 font-medium text-blue-700 capitalize">Status: {b.status}</div>
+                <div className="text-sm mt-1 font-medium text-blue-700 capitalize">
+                  Status: {b.status}
+                </div>
 
                 <div className="flex gap-3 mt-4">
                   <button

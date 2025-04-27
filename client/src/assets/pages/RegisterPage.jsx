@@ -6,6 +6,7 @@ export default function RegisterPage() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [adminCode, setAdminCode] = useState('');
 
     async function registerUser(ev) {
         ev.preventDefault();
@@ -14,6 +15,7 @@ export default function RegisterPage() {
                 name,
                 email,
                 password,
+                adminCode,
             });
             alert('Registration successful.');
         } catch (e) {
@@ -45,6 +47,13 @@ export default function RegisterPage() {
                     value={password} 
                     onChange={ev => setPassword(ev.target.value)} 
                     className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input 
+                    type="text" 
+                    placeholder="(Optional) Admin Code" 
+                    value={adminCode} 
+                    onChange={ev => setAdminCode(ev.target.value)} 
+                    className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 <button className="log bg-blue-500 text-white font-semibold py-2 rounded hover:bg-blue-600 transition duration-200">Register</button>
                 <div className="text-xs text-center mt-4">

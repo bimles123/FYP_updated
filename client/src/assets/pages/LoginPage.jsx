@@ -12,11 +12,17 @@ export default function LoginPage({ setIsAuthenticated }) {
         try {
             const response = await axios.post('/login', { email, password }, { withCredentials: true });
             if (response.status === 200) {
-                const { token, id, name, email } = response.data;
+                const { token, id, name, email, role } = response.data;
                 localStorage.setItem('token', token);
-                localStorage.setItem('user', JSON.stringify({ id, name, email }));
+                localStorage.setItem('user', JSON.stringify({ id, name, email, role }));
                 setIsAuthenticated(true);
-                navigate('/home');
+                
+                // Redirect based on role
+                if (role === 'admin') {
+                    navigate('/admin-dashboard');
+                } else {
+                    navigate('/home');
+                }
             }
         } catch (e) {
             alert(`Login failed: ${e.response?.data?.error || e.message}`);
