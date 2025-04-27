@@ -7,20 +7,20 @@ export default function MyBookings() {
   const [receivedBookings, setReceivedBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showEsewaModal, setShowEsewaModal] = useState(false);
+  const [signature, setSignature] = useState('');
+  const [transactionUUID, setTransactionUUID] = useState('');
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`/api/my-bookings/${currentUser.id}`);
-        setMyBookings(res.data.myBookings);
-        setReceivedBookings(res.data.bookingsForMyHotels);
-      } catch (err) {
-        console.error("Error loading booking data", err);
-      }
-    };
-    if (currentUser?.id) fetchData();
+    if (currentUser?.id) {
+      axios.get(`/api/my-bookings/${currentUser.id}`)
+        .then(res => {
+          setMyBookings(res.data.myBookings);
+          setReceivedBookings(res.data.bookingsForMyHotels);
+        })
+        .catch(err => console.error("Error loading booking data", err));
+    }
   }, [currentUser]);
 
   const handleAccept = async (bookingId) => {
@@ -29,7 +29,7 @@ export default function MyBookings() {
       setReceivedBookings(prev =>
         prev.map(b => b._id === bookingId ? { ...b, status: 'accepted' } : b)
       );
-    } catch (err) {
+    } catch {
       alert("Failed to accept booking");
     }
   };
@@ -40,7 +40,7 @@ export default function MyBookings() {
       setReceivedBookings(prev =>
         prev.map(b => b._id === bookingId ? { ...b, status: 'rejected' } : b)
       );
-    } catch (err) {
+    } catch {
       alert("Failed to cancel booking");
     }
   };
@@ -49,8 +49,7 @@ export default function MyBookings() {
     try {
       await axios.delete(`/api/bookings/${bookingId}/clear`);
       setMyBookings(prev => prev.filter(b => b._id !== bookingId));
-    } catch (err) {
-      console.error("Failed to clear booking", err);
+    } catch {
       alert("Failed to clear this notification");
     }
   };
@@ -62,19 +61,37 @@ export default function MyBookings() {
     navigate("/chat");
   };
 
-  const openEsewaModal = (booking) => {
-    setSelectedBooking(booking);
-    setShowEsewaModal(true);
-  };
-
-  const closeEsewaModal = () => {
-    setSelectedBooking(null);
-    setShowEsewaModal(false);
-  };
-
   const calculateNights = (checkIn, checkOut) => {
     const diff = new Date(checkOut) - new Date(checkIn);
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const openEsewaModal = async (booking) => {
+    const nights = calculateNights(booking.checkIn, booking.checkOut);
+    const total_amount = (booking.hotel.pricePerNight * nights).toFixed(2);
+    const transaction_uuid = `TXN-${Date.now()}`;
+    setTransactionUUID(transaction_uuid);
+
+    try {
+      const res = await axios.post('/api/generate-esewa-signature', {
+        total_amount,
+        transaction_uuid,
+        product_code: "EPAYTEST",
+      });
+      setSignature(res.data.signature);
+      setSelectedBooking(booking);
+      setShowEsewaModal(true);
+    } catch (err) {
+      console.error("Error getting signature", err);
+      alert("Failed to prepare payment.");
+    }
+  };
+
+  const closeEsewaModal = () => {
+    setShowEsewaModal(false);
+    setSelectedBooking(null);
+    setSignature('');
+    setTransactionUUID('');
   };
 
   return (
@@ -90,32 +107,16 @@ export default function MyBookings() {
           myBookings.map((b, i) => {
             const nights = calculateNights(b.checkIn, b.checkOut);
             const total = (b.hotel.pricePerNight * nights).toFixed(2);
-
             return (
-              <div key={i} className="border border-gray-200 bg-white rounded-lg shadow p-4 mb-4">
-                <div className="text-lg font-semibold text-gray-800">
-                  {b.hotel ? b.hotel.name : "❌ Hotel deleted - details unavailable"}
-                </div>
-                <div className="text-sm text-gray-500">{b.hotel?.location || "Location unknown"}</div>
-                <div className="text-sm mt-1">📅 Check-in: {new Date(b.checkIn).toDateString()}</div>
-                <div className="text-sm">📅 Check-out: {new Date(b.checkOut).toDateString()}</div>
-                <div className="text-sm mt-1 font-medium text-green-600 capitalize">Status: {b.status}</div>
-
+              <div key={i} className="border p-4 rounded mb-4 shadow bg-white">
+                <div className="text-lg font-bold">{b.hotel?.name || "Hotel deleted"}</div>
+                <div className="text-sm text-gray-500">{b.hotel?.location || "Unknown"}</div>
+                <div className="text-sm">📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}</div>
+                <div className="text-sm text-green-600 font-semibold">Status: {b.status}</div>
                 {b.status === 'accepted' && (
-                  <button
-                    onClick={() => openEsewaModal(b)}
-                    className="mt-3 bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded"
-                  >
-                    💸 Pay Now
-                  </button>
+                  <button onClick={() => openEsewaModal(b)} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">💸 Pay Now</button>
                 )}
-
-                <button
-                  onClick={() => handleClear(b._id)}
-                  className="mt-3 ml-3 bg-gray-200 hover:bg-gray-300 text-sm text-gray-700 px-3 py-1 rounded"
-                >
-                  🗑️ Clear
-                </button>
+                <button onClick={() => handleClear(b._id)} className="mt-2 ml-3 bg-gray-300 text-sm px-3 py-1 rounded">🗑️ Clear</button>
               </div>
             );
           })
@@ -126,36 +127,29 @@ export default function MyBookings() {
       <div>
         <h2 className="text-2xl font-semibold mb-4 text-purple-700">📥 Bookings Received on My Listings</h2>
         {receivedBookings.filter(b => b.status === 'pending').length === 0 ? (
-          <p className="text-gray-500">No pending requests on your listings.</p>
+          <p className="text-gray-500">No pending requests.</p>
         ) : (
-          receivedBookings
-            .filter(b => b.status === 'pending')
-            .map((b, i) => (
-              <div key={i} className="border border-gray-200 bg-white rounded-lg shadow p-4 mb-4">
-                <div className="text-lg font-semibold text-gray-800">{b.hotel?.name || "❌ Hotel deleted"}</div>
-                <div className="text-sm text-gray-500 mt-1">
-                  👤 Booked by: {b.user?.name || "Unknown"} ({b.user?.email || "Unknown"})
-                </div>
-                <div className="text-sm mt-1">📅 Check-in: {new Date(b.checkIn).toDateString()}</div>
-                <div className="text-sm">📅 Check-out: {new Date(b.checkOut).toDateString()}</div>
-                <div className="text-sm mt-1 font-medium text-blue-700 capitalize">Status: {b.status}</div>
-
-                <div className="flex gap-3 mt-4">
-                  <button onClick={() => handleAccept(b._id)} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">✅ Accept</button>
-                  <button onClick={() => handleCancel(b._id)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">❌ Reject</button>
-                  <button onClick={() => handleChat(b.user)} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">💬 Chat</button>
-                </div>
+          receivedBookings.filter(b => b.status === 'pending').map((b, i) => (
+            <div key={i} className="border p-4 rounded mb-4 shadow bg-white">
+              <div className="text-lg font-semibold">{b.hotel?.name || "Hotel deleted"}</div>
+              <div className="text-sm text-gray-500">👤 {b.user?.name || "Unknown"} ({b.user?.email})</div>
+              <div className="text-sm">📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}</div>
+              <div className="flex gap-2 mt-3">
+                <button onClick={() => handleAccept(b._id)} className="bg-green-500 text-white px-4 py-1 rounded">✅ Accept</button>
+                <button onClick={() => handleCancel(b._id)} className="bg-red-500 text-white px-4 py-1 rounded">❌ Reject</button>
+                <button onClick={() => handleChat(b.user)} className="bg-blue-500 text-white px-4 py-1 rounded">💬 Chat</button>
               </div>
-            ))
+            </div>
+          ))
         )}
       </div>
 
-      {/* eSewa Modal - DEMO VERSION */}
+      {/* eSewa Modal */}
       {showEsewaModal && selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-md max-w-lg w-full relative">
-            <button onClick={closeEsewaModal} className="absolute top-2 right-3 text-red-600 text-xl">✖</button>
-            <h2 className="text-xl font-semibold mb-4 text-green-700">eSewa Payment (Demo)</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded p-6 w-full max-w-md relative">
+            <button onClick={closeEsewaModal} className="absolute top-2 right-3 text-red-600">✖</button>
+            <h2 className="text-lg font-semibold mb-4 text-green-600">Confirm Payment</h2>
 
             <form
               action="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
@@ -165,20 +159,17 @@ export default function MyBookings() {
               <input type="hidden" name="amount" value={selectedBooking.hotel.pricePerNight} />
               <input type="hidden" name="tax_amount" value="0" />
               <input type="hidden" name="total_amount" value={(selectedBooking.hotel.pricePerNight * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
-              <input type="hidden" name="transaction_uuid" value={selectedBooking._id} />
+              <input type="hidden" name="transaction_uuid" value={transactionUUID} />
               <input type="hidden" name="product_code" value="EPAYTEST" />
               <input type="hidden" name="product_service_charge" value="0" />
               <input type="hidden" name="product_delivery_charge" value="0" />
               <input type="hidden" name="success_url" value="https://developer.esewa.com.np/success" />
               <input type="hidden" name="failure_url" value="https://developer.esewa.com.np/failure" />
+              <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code" />
+              <input type="hidden" name="signature" value={signature} />
 
-              <div className="text-sm mb-4">
-                <p><strong>Hotel:</strong> {selectedBooking.hotel.name}</p>
-                <p><strong>Amount:</strong> रु {selectedBooking.hotel.pricePerNight.toFixed(2)} × {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights</p>
-                <p><strong>Total:</strong> रु {(selectedBooking.hotel.pricePerNight * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)}</p>
-              </div>
-
-              <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm">
+              <p className="text-sm mb-3">Paying रु {selectedBooking.hotel.pricePerNight} x {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights</p>
+              <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm w-full">
                 Proceed to eSewa
               </button>
             </form>
