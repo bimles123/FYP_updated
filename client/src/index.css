@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  @apply py-2 border border-black px-3 rounded-2xl;
+}
+
+button.log{
+    @apply border border-black ml-20 mr-20
+}
+
+

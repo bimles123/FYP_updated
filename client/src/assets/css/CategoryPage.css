@@ -1,0 +1,108 @@
+.category-container {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.category-title {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+/* Centered Container */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Search Bar Styling */
+.search-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.search-bar input,
+.search-bar select {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    width: 220px;
+}
+
+.search-bar input:focus,
+.search-bar select:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+}
+
+/* Hotel List Grid */
+.hotel-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    padding: 20px;
+}
+
+/* Hotel Card Styling */
+.hotel-card {
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 300px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    text-align: center;
+    padding-bottom: 15px;
+}
+
+.hotel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Hotel Image */
+.hotel-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-bottom: 3px solid #3498db;
+}
+
+/* Hotel Card Text */
+.hotel-card h2 {
+    font-size: 1.4rem;
+    margin: 15px 0 10px;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.hotel-card p {
+    font-size: 1rem;
+    color: #555;
+    margin: 5px 0;
+}
+
+/* Rating Stars */
+.hotel-card p strong {
+    color: #34495e;
+}
+
+/* No Hotels Message */
+.no-hotels {
+    font-size: 1.2rem;
+    color: #e74c3c;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+}

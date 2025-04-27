@@ -1,0 +1,15 @@
+/* Header Styling */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px 20px;
+  z-index: 1000; /* Ensures the header stays on top */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* To prevent content from being hidden under the header */
+body {
+  padding-top: 60px; /* Adjust based on the header's height */
+}
