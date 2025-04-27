@@ -16,6 +16,10 @@ const AddHotelPage = () => {
   const [mediaFiles, setMediaFiles] = useState([])
   const [mediaPreviews, setMediaPreviews] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const navigate = useNavigate()
 
   const user = JSON.parse(localStorage.getItem("user"))
@@ -67,20 +71,12 @@ const AddHotelPage = () => {
         media: additionalMedia,
       })
 
-      alert("Hotel added successfully!")
-      setName("")
-      setLocation("")
-      setPricePerNight("")
-      setStars("")
-      setDescription("")
-      setImageFile(null)
-      setImagePreview("")
-      setMediaFiles([])
-      setMediaPreviews([])
-      navigate("/home")
+      setSuccessMessage("✅ Hotel added successfully!")
+      setShowSuccessModal(true)
     } catch (error) {
       console.error("Error adding hotel:", error)
-      alert("Failed to add hotel")
+      setErrorMessage("❌ Failed to add hotel. Please try again.")
+      setShowErrorModal(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -93,49 +89,19 @@ const AddHotelPage = () => {
         <form onSubmit={handleSubmit} className="add-hotel-form">
           <div className="form-group">
             <label htmlFor="name">Hotel Name</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter hotel name"
-              required
-            />
+            <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter hotel name" required />
           </div>
           <div className="form-group">
             <label htmlFor="location">Location</label>
-            <input
-              type="text"
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="City, Country"
-              required
-            />
+            <input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, Country" required />
           </div>
           <div className="form-group">
             <label htmlFor="pricePerNight">Price Per Night (रु)</label>
-            <input
-              type="number"
-              id="pricePerNight"
-              value={pricePerNight}
-              onChange={(e) => setPricePerNight(e.target.value)}
-              placeholder="0.00"
-              required
-            />
+            <input type="number" id="pricePerNight" value={pricePerNight} onChange={(e) => setPricePerNight(e.target.value)} placeholder="0.00" required />
           </div>
           <div className="form-group">
             <label htmlFor="stars">Star Category (1-5 Star)</label>
-            <input
-              type="number"
-              id="stars"
-              value={stars}
-              onChange={(e) => setStars(e.target.value)}
-              min="1"
-              max="5"
-              placeholder="e.g., 4"
-              required
-            />
+            <input type="number" id="stars" value={stars} onChange={(e) => setStars(e.target.value)} min="1" max="5" placeholder="e.g., 4" required />
           </div>
           <div className="form-group">
             <label htmlFor="description">Hotel Description</label>
@@ -162,7 +128,7 @@ const AddHotelPage = () => {
                   <video key={idx} src={src} controls className="media-preview" />
                 ) : (
                   <img key={idx} src={src || "/placeholder.svg"} alt="preview" className="media-preview" />
-                ),
+                )
               )}
             </div>
           </div>
@@ -171,6 +137,41 @@ const AddHotelPage = () => {
           </button>
         </form>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center animate-fade-in">
+            <h2 className="text-xl font-semibold text-green-600 mb-3">Success</h2>
+            <p className="text-gray-700 mb-6">{successMessage}</p>
+            <button
+              onClick={() => {
+                setShowSuccessModal(false)
+                navigate("/home")
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center animate-fade-in">
+            <h2 className="text-xl font-semibold text-red-600 mb-3">Error</h2>
+            <p className="text-gray-700 mb-6">{errorMessage}</p>
+            <button
+              onClick={() => setShowErrorModal(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

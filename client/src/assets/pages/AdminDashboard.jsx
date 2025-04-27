@@ -12,17 +12,21 @@ export default function AdminDashboard() {
   const [showLogs, setShowLogs] = useState(false);
   const [showDeletedHotels, setShowDeletedHotels] = useState(false);
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [onConfirm, setOnConfirm] = useState(() => () => {});
+
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     if (user?.role === "admin") {
-      axios.get("/api/admin/reports").then(res => setReports(res.data));
-      axios.get("/api/users").then(res => setUsersCount(res.data.length));
-      axios.get("/api/hotels").then(res => {
+      axios.get("/api/admin/reports").then((res) => setReports(res.data));
+      axios.get("/api/users").then((res) => setUsersCount(res.data.length));
+      axios.get("/api/hotels").then((res) => {
         setHotelsCount(res.data.length);
-        setDeletedHotels(res.data.filter(h => h.isDeleted)); // ✅ collect soft-deleted hotels
+        setDeletedHotels(res.data.filter((h) => h.isDeleted));
       });
-      axios.get("/api/admin/logs").then(res => setLogs(res.data));
+      axios.get("/api/admin/logs").then((res) => setLogs(res.data));
     }
   }, [user]);
 
@@ -61,7 +65,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Hotel Reports Section */}
       {showReports && (
         <div className="reports-section">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">🚩 Reported Hotels</h2>
@@ -83,22 +86,19 @@ export default function AdminDashboard() {
                   </a>{" "}
                   ({r.reporter.email})
                 </p>
-                <p>
-                  <strong>Reason:</strong> {r.reason}
-                </p>
-                <p>
-                  <strong>Details:</strong> {r.details || "No additional details"}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  🕒 {new Date(r.createdAt).toLocaleString()}
-                </p>
+                <p><strong>Reason:</strong> {r.reason}</p>
+                <p><strong>Details:</strong> {r.details || "No additional details"}</p>
+                <p className="text-sm text-gray-500 mt-1">🕒 {new Date(r.createdAt).toLocaleString()}</p>
 
                 <button
-                  onClick={async () => {
-                    if (window.confirm("Mark this report as addressed and remove it?")) {
+                  onClick={() => {
+                    setConfirmMessage("Mark this report as addressed and remove it?");
+                    setOnConfirm(() => async () => {
                       await axios.delete(`/api/admin/reports/${r._id}`);
                       setReports((prev) => prev.filter((x) => x._id !== r._id));
-                    }
+                      setShowConfirmModal(false);
+                    });
+                    setShowConfirmModal(true);
                   }}
                   className="mt-3 bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded"
                 >
@@ -110,7 +110,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Audit Logs Section */}
       {showLogs && (
         <div className="reports-section">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">📁 Recent Audit Logs</h2>
@@ -119,29 +118,15 @@ export default function AdminDashboard() {
           ) : (
             logs.map((log) => (
               <div key={log._id} className="border border-gray-300 bg-white p-4 rounded shadow mb-4">
-                <p>
-                  <strong>Action:</strong> {log.action.replace(/-/g, ' ')}
-                </p>
-                <p>
-                  <strong>User:</strong>{" "}
-                  {log.user ? (
-                    <>
-                      <a href={`/user/${log.user._id}`} className="text-blue-600 hover:underline">
-                        {log.user.name}
-                      </a>{" "}
-                      ({log.user.email})
-                    </>
-                  ) : (
-                    <span className="text-red-500">Unknown User</span>
-                  )}
-                </p>
-                <p>
-                  <strong>Target:</strong> {log.targetType} — {log.targetId}
-                </p>
+                <p><strong>Action:</strong> {log.action.replace(/-/g, ' ')}</p>
+                <p><strong>User:</strong> {log.user ? (
+                  <><a href={`/user/${log.user._id}`} className="text-blue-600 hover:underline">{log.user.name}</a> ({log.user.email})</>
+                ) : (
+                  <span className="text-red-500">Unknown User</span>
+                )}</p>
+                <p><strong>Target:</strong> {log.targetType} — {log.targetId}</p>
                 {log.details && Object.keys(log.details).length > 0 && (
-                  <p className="text-sm mt-1 text-gray-600">
-                    <strong>Details:</strong> {JSON.stringify(log.details)}
-                  </p>
+                  <p className="text-sm mt-1 text-gray-600"><strong>Details:</strong> {JSON.stringify(log.details)}</p>
                 )}
                 <p className="text-sm text-gray-500 mt-1">🕒 {new Date(log.createdAt).toLocaleString()}</p>
               </div>
@@ -150,74 +135,82 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Soft Deleted Hotels Section */}
-      {/* Soft Deleted Hotels Section */}
+      {showDeletedHotels && (
+        <div className="reports-section">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">🗑️ Soft Deleted Hotels</h2>
+          {deletedHotels.length === 0 ? (
+            <p className="text-gray-500">No soft deleted hotels found.</p>
+          ) : (
+            deletedHotels.map(hotel => (
+              <div key={hotel._id} className="border border-yellow-400 bg-white p-4 rounded shadow mb-4">
+                <h3 className="text-lg font-semibold">{hotel.name}</h3>
+                <p><strong>Location:</strong> {hotel.location}</p>
+                <p><strong>Price:</strong> ${hotel.pricePerNight}</p>
+                <p><strong>Stars:</strong> {hotel.stars} ⭐</p>
+                <p><strong>Status:</strong> <span className="text-red-600 font-semibold">Deleted</span></p>
+                <p><strong>Owner:</strong> <a href={`/user/${hotel.user?._id}`} className="text-blue-600 hover:underline">{hotel.user?.name || "Unknown"}</a></p>
 
-      
-{showDeletedHotels && (
-  <div className="reports-section">
-    <h2 className="text-xl font-semibold mb-4 text-gray-800">🗑️ Soft Deleted Hotels</h2>
-    {deletedHotels.length === 0 ? (
-      <p className="text-gray-500">No soft deleted hotels found.</p>
-    ) : (
-      deletedHotels.map(hotel => (
-        <div key={hotel._id} className="border border-yellow-400 bg-white p-4 rounded shadow mb-4">
-          <h3 className="text-lg font-semibold">{hotel.name}</h3>
-          <p><strong>Location:</strong> {hotel.location}</p>
-          <p><strong>Price:</strong> ${hotel.pricePerNight}</p>
-          <p><strong>Stars:</strong> {hotel.stars} ⭐</p>
-          <p><strong>Status:</strong> <span className="text-red-600 font-semibold">Deleted</span></p>
-          <p>
-            <strong>Owner:</strong>{" "}
-            <a href={`/user/${hotel.user?._id}`} className="text-blue-600 hover:underline">
-              {hotel.user?.name || "Unknown"}
-            </a>
-          </p>
+                <div className="mt-3 flex gap-3">
+                  <a href={`/hotel/${hotel._id}`} className="text-sm text-blue-600 hover:underline">🔍 View Hotel Page</a>
 
-          <div className="mt-3 flex gap-3">
-            <a
-              href={`/hotel/${hotel._id}`}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              🔍 View Hotel Page
-            </a>
+                  <button
+                    onClick={() => {
+                      setConfirmMessage("Restore this hotel listing?");
+                      setOnConfirm(() => async () => {
+                        await axios.put(`/api/admin/restore-hotel/${hotel._id}`, { adminId: user.id });
+                        setDeletedHotels(prev => prev.filter(h => h._id !== hotel._id));
+                        setShowConfirmModal(false);
+                      });
+                      setShowConfirmModal(true);
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded"
+                  >
+                    ♻️ Restore
+                  </button>
 
-            <button
-              onClick={async () => {
-                if (window.confirm("Restore this hotel listing?")) {
-                  await axios.put(`/api/admin/restore-hotel/${hotel._id}`, {
-                    adminId: user.id
-                  });
-                  setDeletedHotels(prev => prev.filter(h => h._id !== hotel._id));
-                }
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded"
-            >
-              ♻️ Restore
-            </button>
+                  <button
+                    onClick={() => {
+                      setConfirmMessage("⚠️ This will permanently delete the hotel. Proceed?");
+                      setOnConfirm(() => async () => {
+                        await axios.delete(`/api/admin/permanent-delete-hotel/${hotel._id}`, { data: { adminId: user.id } });
+                        setDeletedHotels(prev => prev.filter(h => h._id !== hotel._id));
+                        setShowConfirmModal(false);
+                      });
+                      setShowConfirmModal(true);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
+                  >
+                    ❌ Permanently Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
-            <button
-              onClick={async () => {
-                if (window.confirm("⚠️ This will permanently delete the hotel. Proceed?")) {
-                  await axios.delete(`/api/admin/permanent-delete-hotel/${hotel._id}`, {
-                    data: { adminId: user.id }
-                  });
-                  setDeletedHotels(prev => prev.filter(h => h._id !== hotel._id));
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
-            >
-              ❌ Permanently Delete
-            </button>
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center animate-fade-in">
+            <h2 className="text-lg font-semibold text-red-600 mb-3">Please Confirm</h2>
+            <p className="text-gray-700 mb-6">{confirmMessage}</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
-      ))
-    )}
-    
-  </div>
-)}
-    
-
+      )}
     </div>
   );
 }

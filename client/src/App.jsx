@@ -16,6 +16,10 @@ import AdminDashboard from './assets/pages/AdminDashboard.jsx';
 import Notification from './assets/pages/Notification.jsx';
 
 
+
+
+
+
 import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:4000';
 
@@ -45,6 +49,7 @@ function App() {
 
   return (
     <Routes>
+      
       <Route path="/" element={<Layout searchValue={searchValue} setSearchValue={setSearchValue} />}>
         <Route index element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
         <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
@@ -65,6 +70,7 @@ function App() {
         <Route path="/mybookings" element={<MyBookings />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/notification" element={<Notification />} />
+        
       </Route>
     </Routes>
   );

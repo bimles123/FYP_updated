@@ -69,7 +69,8 @@ export default function MyBookings() {
 
   const openEsewaModal = async (booking) => {
     const nights = calculateNights(booking.checkIn, booking.checkOut);
-    const total_amount = parseFloat(booking.hotel.pricePerNight * nights).toFixed(2);
+    const price = booking.hotel?.pricePerNight || 0;
+    const total_amount = parseFloat(price * nights).toFixed(2);
     const transaction_uuid = `TXN-${Date.now()}`;
     setTransactionUUID(transaction_uuid);
 
@@ -127,12 +128,12 @@ export default function MyBookings() {
       if (justPaidBookingId) {
         localStorage.setItem(`paid_${justPaidBookingId}`, JSON.stringify({ status: 'PAID' }));
         markPaidLocally(justPaidBookingId);
-  
+
         try {
           const res = await axios.get(`/api/my-bookings/${currentUser.id}`);
           setMyBookings(res.data.myBookings);
           setReceivedBookings(res.data.bookingsForMyHotels);
-  
+
           const paidBooking = res.data.myBookings.find(b => b._id === justPaidBookingId);
           if (paidBooking && paidBooking.hotel?.user?._id) {
             await axios.post("/api/messages", {
@@ -147,15 +148,14 @@ export default function MyBookings() {
         } catch (err) {
           console.error("❌ Error sending payment confirmation:", err);
         }
-  
+
         setJustPaidBookingId(null);
       }
     };
-  
+
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [justPaidBookingId, currentUser]);
-  
 
   return (
     <div className="max-w-5xl mx-auto mt-20 p-4">
@@ -169,7 +169,8 @@ export default function MyBookings() {
         ) : (
           myBookings.map((b, i) => {
             const nights = calculateNights(b.checkIn, b.checkOut);
-            const total = (b.hotel.pricePerNight * nights).toFixed(2);
+            const price = b.hotel?.pricePerNight || 0;
+            const total = (price * nights).toFixed(2);
             const paid = hasPaid(b._id);
 
             return (
@@ -181,19 +182,12 @@ export default function MyBookings() {
 
                 {b.status === 'accepted' && (
                   paid ? (
-                    <>
-                      <button disabled className="mt-2 bg-gray-300 text-white px-4 py-2 rounded">✅ Paid</button>
-                      <button
-                        onClick={() => requestRefund(b)}
-                        className="ml-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded"
-                      >
-                        Request Refund
-                      </button>
-                    </>
+                    <button disabled className="mt-2 bg-gray-300 text-white px-4 py-2 rounded">✅ Paid</button>
                   ) : (
                     <button onClick={() => openEsewaModal(b)} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">💸 Pay Now</button>
                   )
                 )}
+
                 <button onClick={() => handleClear(b._id)} className="mt-2 ml-3 bg-gray-300 text-sm px-3 py-1 rounded">🗑️ Clear</button>
               </div>
             );
@@ -235,9 +229,9 @@ export default function MyBookings() {
               target="_blank"
               onSubmit={() => setJustPaidBookingId(selectedBooking._id)}
             >
-              <input type="hidden" name="amount" value={(selectedBooking.hotel.pricePerNight * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
+              <input type="hidden" name="amount" value={((selectedBooking.hotel?.pricePerNight || 0) * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
               <input type="hidden" name="tax_amount" value="0" />
-              <input type="hidden" name="total_amount" value={(selectedBooking.hotel.pricePerNight * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
+              <input type="hidden" name="total_amount" value={((selectedBooking.hotel?.pricePerNight || 0) * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
               <input type="hidden" name="transaction_uuid" value={transactionUUID} />
               <input type="hidden" name="product_code" value="EPAYTEST" />
               <input type="hidden" name="product_service_charge" value="0" />
@@ -248,7 +242,7 @@ export default function MyBookings() {
               <input type="hidden" name="signature" value={signature} />
 
               <p className="text-sm mb-3">
-                Paying रु {selectedBooking.hotel.pricePerNight} x {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights
+                Paying रु {selectedBooking.hotel?.pricePerNight || 0} x {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights
               </p>
               <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm w-full">
                 Proceed to eSewa
