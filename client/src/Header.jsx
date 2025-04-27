@@ -145,10 +145,15 @@ export default function Header() {
                 {!isAuthPage && (
                     <div className="border-t border-gray-300 bg-white px-4 py-2 flex justify-between items-center">
                         <div className="flex gap-4 overflow-x-auto">
-                            {["Reachers", "Nav"].map((category, index) => (
-                                <div key={index} className="px-2 py-1 rounded-full hover:bg-gray-200 cursor-pointer">{category}</div>
-                            ))}
-                            <Link to="/add-hotel" className="px-2 py-1 rounded-full hover:bg-gray-200 cursor-pointer">Add Hotel</Link>
+                            <Link to="/reachers" className="px-2 py-1 rounded-full hover:bg-gray-200 cursor-pointer">
+                                Reachers
+                            </Link>
+                            <Link to="/chat" className="px-2 py-1 rounded-full hover:bg-gray-200 cursor-pointer">
+                                My Chats
+                            </Link>
+                            <Link to="/add-hotel" className="px-2 py-1 rounded-full hover:bg-gray-200 cursor-pointer">
+                                Add Hotel
+                            </Link>
                         </div>
                         <Link to="/category">
                             <button className="flex items-center gap-1 border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-200">
@@ -161,14 +166,22 @@ export default function Header() {
                     </div>
                 )}
 
+
                 <div className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg transform ${isSidebarOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out`}>
                     <button className="absolute top-4 right-4 text-gray-600 hover:text-black" onMouseDown={toggleSidebar}>✖</button>
                     <div className="p-6">
-                        {username && (
-                            <div className="mb-4 text-lg text-gray-800 font-semibold">
-                                👤 {username}
-                            </div>
-                        )}
+                    {username && (
+                        <div className="mb-4 text-lg text-blue-600 font-semibold cursor-pointer hover:underline"
+                            onClick={() => {
+                                const user = JSON.parse(localStorage.getItem("user"));
+                                if (user?.id) {
+                                    window.location.href = `/user/${user.id}`;
+                                }
+                            }}>
+                            👤 {username}
+                        </div>
+                    )}
+
                         <button 
                             onMouseDown={() => {
                                 localStorage.removeItem("token");

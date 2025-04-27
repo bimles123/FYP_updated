@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../css/CategoryPage.css";
-import HotelModal from "./HotelModal"; // Import the modal component
+import HotelModal from "./HotelModal";
 
 const CategoryPage = () => {
   const [hotels, setHotels] = useState([]);
@@ -9,7 +9,7 @@ const CategoryPage = () => {
   const [location, setLocation] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [rating, setRating] = useState("");
-  const [selectedHotel, setSelectedHotel] = useState(null); // State for modal
+  const [selectedHotel, setSelectedHotel] = useState(null);
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -45,19 +45,18 @@ const CategoryPage = () => {
 
   const filteredHotels = handleSearch();
 
-  // Function to handle switching to the next hotel
   const nextHotel = () => {
     if (!selectedHotel || filteredHotels.length === 0) return;
-    
     const currentIndex = filteredHotels.findIndex(h => h._id === selectedHotel._id);
-    const nextIndex = (currentIndex + 1) % filteredHotels.length; // Loop back if last
+    const nextIndex = (currentIndex + 1) % filteredHotels.length;
     setSelectedHotel(filteredHotels[nextIndex]);
   };
 
   return (
     <div className="category-page">
       <div className="category-container">
-        <h2 className="category-title font-bold text-xl text-gray-800">Search for Hotels</h2>
+        <h2 className="category-title">Search for Hotels</h2>
+
         <div className="search-bar">
           <input
             type="text"
@@ -87,19 +86,22 @@ const CategoryPage = () => {
             <option value="5">5 Stars</option>
           </select>
         </div>
+
         <div className="hotel-list">
           {filteredHotels.length > 0 ? (
             filteredHotels.map((hotel) => (
               <div
                 key={hotel._id}
                 className="hotel-card"
-                onClick={() => setSelectedHotel(hotel)} // Open modal on click
+                onClick={() => setSelectedHotel(hotel)}
               >
                 <img src={hotel.image} alt={hotel.name} className="hotel-image" />
-                <h2>{hotel.name}</h2>
-                <p><strong>Location:</strong> {hotel.location}</p>
-                <p><strong>Price:</strong> ${hotel.pricePerNight} per night</p>
-                <p><strong>Rating:</strong> {hotel.rating} Stars</p>
+                <div className="hotel-info">
+                  <h2>{hotel.name}</h2>
+                  <p>{hotel.location}</p>
+                  <p>Price: ${hotel.pricePerNight} per night</p>
+                  <p>Rating: {hotel.rating} ⭐</p>
+                </div>
               </div>
             ))
           ) : (
@@ -108,12 +110,11 @@ const CategoryPage = () => {
         </div>
       </div>
 
-      {/* Show the hotel modal when a hotel is clicked */}
       {selectedHotel && (
         <HotelModal
           hotel={selectedHotel}
           onClose={() => setSelectedHotel(null)}
-          onNext={nextHotel} // Pass next function
+          onNext={nextHotel}
         />
       )}
     </div>

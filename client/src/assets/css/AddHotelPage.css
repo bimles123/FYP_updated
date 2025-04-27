@@ -1,27 +1,54 @@
 .add-hotel-page {
-  background-color: #f0f2f5;
+  background-color: #f5f7fa;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 40px 20px;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .add-hotel-container {
   background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 40px;
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
+  position: relative;
+  overflow: hidden;
+}
+
+.add-hotel-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, #3498db, #2980b9);
 }
 
 .add-hotel-title {
-  color: #333;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 30px;
   text-align: center;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.add-hotel-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background-color: #3498db;
+  border-radius: 3px;
 }
 
 .add-hotel-form {
@@ -30,54 +57,129 @@
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  position: relative;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  color: #555;
+  margin-bottom: 8px;
+  color: #34495e;
   font-weight: 500;
+  font-size: 15px;
+  transition: color 0.3s ease;
 }
 
 .add-hotel-form input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px 16px;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
   font-size: 16px;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  background-color: #f8fafc;
+  color: #2c3e50;
 }
 
 .add-hotel-form input:focus {
   outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  background-color: #fff;
+}
+
+.add-hotel-form input[type="file"] {
+  padding: 10px;
+  background-color: #f8fafc;
+  border: 2px dashed #cbd5e0;
+  cursor: pointer;
+}
+
+.add-hotel-form input[type="file"]:hover {
+  border-color: #3498db;
+}
+
+.preview-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.media-preview {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.media-preview:hover {
+  transform: scale(1.05);
 }
 
 .submit-button {
-  background-color: #4a90e2;
+  background: linear-gradient(90deg, #3498db, #2980b9);
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 12px 20px;
+  border-radius: 8px;
+  padding: 14px 20px;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+  letter-spacing: 0.5px;
 }
 
 .submit-button:hover {
-  background-color: #357abd;
+  background: linear-gradient(90deg, #2980b9, #3498db);
+  box-shadow: 0 6px 8px rgba(52, 152, 219, 0.3);
+  transform: translateY(-2px);
 }
 
 .submit-button:active {
-  background-color: #2a5f9e;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
 }
 
-@media (max-width: 600px) {
+/* Form field animations */
+.form-group:focus-within label {
+  color: #3498db;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
   .add-hotel-container {
-    padding: 20px;
+    padding: 30px 25px;
+  }
+
+  .add-hotel-title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-hotel-page {
+    padding: 20px 15px;
+  }
+
+  .add-hotel-container {
+    padding: 25px 20px;
+  }
+
+  .preview-container {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .media-preview {
+    height: 80px;
+  }
+
+  .submit-button {
+    padding: 12px 16px;
   }
 }
 

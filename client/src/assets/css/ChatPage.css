@@ -1,0 +1,22 @@
+/* Optional CSS file for additional styling if needed */
+/* You can import this in your layout.tsx or page.tsx */
+
+/* Custom scrollbar for message container */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #0ea5e9;
+}
+

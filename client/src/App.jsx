@@ -8,6 +8,10 @@ import RegisterPage from './assets/pages/RegisterPage.jsx';
 import AddHotelPage from './assets/pages/AddHotelPage.jsx';
 import CategoryPage from './assets/pages/CategoryPage.jsx';
 import Layout from './Layout.jsx';
+import ChatPage from './assets/pages/ChatPage.jsx';
+import UserProfilePage from './assets/pages/UserProfilePage.jsx'; // ✅ Import new page
+import HotelDetailPage from './assets/pages/HotelDetailPage.jsx';
+
 import axios from 'axios';
 
 axios.defaults.baseURL = 'http://localhost:4000';
@@ -25,16 +29,14 @@ function App() {
         } else {
             setIsAuthenticated(false);
         }
-    }, [isAuthenticated]); // Listen to `isAuthenticated`
-    
+    }, [isAuthenticated]);
 
     const handleLogout = async () => {
-        console.log("Logout Clicked"); // Check if this prints on every click
+        console.log("Logout Clicked");
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         navigate('/login', { replace: true });
     };
-    
 
     return (
         <Routes>
@@ -46,6 +48,10 @@ function App() {
                 <Route path="/home" element={isAuthenticated ? <HomePage /> : <Navigate to="/login" />} />
                 <Route path="/category" element={isAuthenticated ? <CategoryPage /> : <Navigate to="/login" />} />
                 <Route path="/index" element={<IndexPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/user/:userId" element={isAuthenticated ? <UserProfilePage /> : <Navigate to="/login" />} /> {/* ✅ New */}
+                <Route path="/hotel/:id" element={<HotelDetailPage />} />
+
             </Route>
         </Routes>
     );
