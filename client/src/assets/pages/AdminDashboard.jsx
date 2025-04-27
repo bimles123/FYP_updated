@@ -152,6 +152,8 @@ export default function AdminDashboard() {
 
       {/* Soft Deleted Hotels Section */}
       {/* Soft Deleted Hotels Section */}
+
+      
 {showDeletedHotels && (
   <div className="reports-section">
     <h2 className="text-xl font-semibold mb-4 text-gray-800">🗑️ Soft Deleted Hotels</h2>
@@ -211,8 +213,10 @@ export default function AdminDashboard() {
         </div>
       ))
     )}
+    
   </div>
 )}
+    
 
     </div>
   );

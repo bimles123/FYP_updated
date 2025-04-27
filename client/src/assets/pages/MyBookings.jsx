@@ -9,6 +9,7 @@ export default function MyBookings() {
   const [showEsewaModal, setShowEsewaModal] = useState(false);
   const [signature, setSignature] = useState('');
   const [transactionUUID, setTransactionUUID] = useState('');
+  const [justPaidBookingId, setJustPaidBookingId] = useState(null);
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
@@ -68,7 +69,7 @@ export default function MyBookings() {
 
   const openEsewaModal = async (booking) => {
     const nights = calculateNights(booking.checkIn, booking.checkOut);
-    const total_amount = (booking.hotel.pricePerNight * nights).toFixed(2);
+    const total_amount = parseFloat(booking.hotel.pricePerNight * nights).toFixed(2);
     const transaction_uuid = `TXN-${Date.now()}`;
     setTransactionUUID(transaction_uuid);
 
@@ -81,6 +82,7 @@ export default function MyBookings() {
       setSignature(res.data.signature);
       setSelectedBooking(booking);
       setShowEsewaModal(true);
+      setJustPaidBookingId(null);
     } catch (err) {
       console.error("Error getting signature", err);
       alert("Failed to prepare payment.");
@@ -93,6 +95,44 @@ export default function MyBookings() {
     setSignature('');
     setTransactionUUID('');
   };
+
+  const markPaidLocally = (bookingId) => {
+    setMyBookings(prev =>
+      prev.map(b => b._id === bookingId ? { ...b, paid: true } : b)
+    );
+  };
+
+  const requestRefund = (booking) => {
+    const hotelOwner = booking.hotel?.user;
+    if (!hotelOwner) return alert("Hotel owner not found.");
+    const message = `Hello, I would like to request a refund for booking: ${booking._id}`;
+    axios.post("/api/messages", {
+      senderId: currentUser.id,
+      receiverId: hotelOwner._id,
+      message,
+    }).then(() => {
+      alert("Refund request sent.");
+    }).catch(() => {
+      alert("Failed to send refund request.");
+    });
+  };
+
+  const hasPaid = (bookingId) => {
+    const data = JSON.parse(localStorage.getItem(`paid_${bookingId}`));
+    return data?.status === 'PAID';
+  };
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (justPaidBookingId) {
+        localStorage.setItem(`paid_${justPaidBookingId}`, JSON.stringify({ status: 'PAID' }));
+        markPaidLocally(justPaidBookingId);
+        setJustPaidBookingId(null);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [justPaidBookingId]);
 
   return (
     <div className="max-w-5xl mx-auto mt-20 p-4">
@@ -107,14 +147,29 @@ export default function MyBookings() {
           myBookings.map((b, i) => {
             const nights = calculateNights(b.checkIn, b.checkOut);
             const total = (b.hotel.pricePerNight * nights).toFixed(2);
+            const paid = hasPaid(b._id);
+
             return (
               <div key={i} className="border p-4 rounded mb-4 shadow bg-white">
                 <div className="text-lg font-bold">{b.hotel?.name || "Hotel deleted"}</div>
                 <div className="text-sm text-gray-500">{b.hotel?.location || "Unknown"}</div>
                 <div className="text-sm">📅 {new Date(b.checkIn).toDateString()} to {new Date(b.checkOut).toDateString()}</div>
                 <div className="text-sm text-green-600 font-semibold">Status: {b.status}</div>
+
                 {b.status === 'accepted' && (
-                  <button onClick={() => openEsewaModal(b)} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">💸 Pay Now</button>
+                  paid ? (
+                    <>
+                      <button disabled className="mt-2 bg-gray-300 text-white px-4 py-2 rounded">✅ Paid</button>
+                      <button
+                        onClick={() => requestRefund(b)}
+                        className="ml-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded"
+                      >
+                        Request Refund
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => openEsewaModal(b)} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">💸 Pay Now</button>
+                  )
                 )}
                 <button onClick={() => handleClear(b._id)} className="mt-2 ml-3 bg-gray-300 text-sm px-3 py-1 rounded">🗑️ Clear</button>
               </div>
@@ -155,8 +210,9 @@ export default function MyBookings() {
               action="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
               method="POST"
               target="_blank"
+              onSubmit={() => setJustPaidBookingId(selectedBooking._id)}
             >
-              <input type="hidden" name="amount" value={selectedBooking.hotel.pricePerNight} />
+              <input type="hidden" name="amount" value={(selectedBooking.hotel.pricePerNight * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
               <input type="hidden" name="tax_amount" value="0" />
               <input type="hidden" name="total_amount" value={(selectedBooking.hotel.pricePerNight * calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)).toFixed(2)} />
               <input type="hidden" name="transaction_uuid" value={transactionUUID} />
@@ -168,7 +224,9 @@ export default function MyBookings() {
               <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code" />
               <input type="hidden" name="signature" value={signature} />
 
-              <p className="text-sm mb-3">Paying रु {selectedBooking.hotel.pricePerNight} x {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights</p>
+              <p className="text-sm mb-3">
+                Paying रु {selectedBooking.hotel.pricePerNight} x {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights
+              </p>
               <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm w-full">
                 Proceed to eSewa
               </button>

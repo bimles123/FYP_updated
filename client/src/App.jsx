@@ -14,6 +14,7 @@ import HotelDetailPage from './assets/pages/HotelDetailPage.jsx';
 import MyBookings from './assets/pages/MyBookings.jsx';
 import AdminDashboard from './assets/pages/AdminDashboard.jsx';
 
+
 import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:4000';
 
