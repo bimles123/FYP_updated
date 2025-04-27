@@ -68,6 +68,21 @@ const ForumPage = () => {
     }
   }
 
+  const deleteReview = async (reviewId) => {
+    try {
+      await axios.delete(`/api/hotels/${hotelId}/reviews/${reviewId}`, {
+        data: { userId: currentUser.id },
+      });
+  
+      const res = await axios.get(`/api/hotels/${hotelId}/reviews`);
+      setReviews(res.data);
+    } catch (err) {
+      console.error("Failed to delete review", err);
+      setError("Could not delete your review.");
+    }
+  };
+  
+
   const averageRating = reviews.length
     ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
     : null
@@ -202,6 +217,15 @@ const ForumPage = () => {
                   <span className="stars">{"★".repeat(review.stars)}</span>
                   <span className="empty-stars">{"★".repeat(5 - review.stars)}</span>
                 </div>
+                {review.user?._id === currentUser?.id && (
+                  <button
+                    className="delete-button"
+                    onClick={() => deleteReview(review._id)}
+                    title="Delete Review"
+                  >
+                    ❌
+                  </button>
+                )}
               </div>
               <p>{review.comment}</p>
             </div>

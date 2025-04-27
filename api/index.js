@@ -9,6 +9,8 @@ const multer = require('multer');
 const path = require('path');
 const Report = require('./models/Report');
 const AuditLog = require('./models/AuditLog');
+const Payment = require("./models/Payment");
+
 
 
 
@@ -80,6 +82,62 @@ app.get('/api/hotels/:id/reviews', async (req, res) => {
   }
 });
 
+// Record a payment (called after booking is marked as "paid")
+app.post("/api/payments", async (req, res) => {
+  try {
+    const { userId, hotelId, amount } = req.body;
+    const payment = await Payment.create({
+      user: userId,
+      hotel: hotelId,
+      amount,
+    });
+    res.json(payment);
+  } catch (err) {
+    console.error("Payment creation failed:", err);
+    res.status(500).json({ error: "Failed to record payment" });
+  }
+});
+
+// Admin: Get all payments overview
+app.get("/api/admin/payments", async (req, res) => {
+  try {
+    const payments = await Payment.find().populate("user hotel");
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch payments" });
+  }
+});
+
+//asd
+
+app.put("/api/admin/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const user = await User.findByIdAndUpdate(id, { status }, { new: true });
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json(user);
+  } catch (err) {
+    console.error("Failed to update user status:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+//status
+
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find({}, "-password"); // ✅ make sure 'status' is not excluded
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+
 // Post a new review
 app.post('/api/hotels/:id/reviews', async (req, res) => {
   const { comment, stars, userId } = req.body;  // <-- ✅ use 'stars'
@@ -99,6 +157,33 @@ app.post('/api/hotels/:id/reviews', async (req, res) => {
     res.status(500).json({ error: 'Failed to post review' });
   }
 });
+
+// DELETE a review
+app.delete('/api/hotels/:hotelId/reviews/:reviewId', async (req, res) => {
+  const { reviewId } = req.params;
+  const userId = req.body.userId;
+
+  try {
+    const review = await Review.findById(reviewId);
+
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    if (review.user.toString() !== userId) {
+      return res.status(403).json({ error: 'Not authorized to delete this review' });
+    }
+
+    await review.deleteOne();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete review error:', err);
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
+
 
 
 
@@ -415,35 +500,42 @@ app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const userDoc = await User.findOne({ email });
 
-  if (userDoc) {
-    const passOk = bcrypt.compareSync(password, userDoc.password);
-    if (passOk) {
-      jwt.sign(
-        {
-          email: userDoc.email,
-          id: userDoc._id,
-          name: userDoc.name,
-          role: userDoc.role,
-        },
-        jwtSecret,
-        {},
-        (err, token) => {
-          if (err) throw err;
-          res.cookie('token', token, { httpOnly: true }).json({
-            token,
-            id: userDoc._id,
-            name: userDoc.name,
-            email: userDoc.email,
-            role: userDoc.role,
-          });
-        }
-      );
-    } else {
-      res.status(422).json({ error: 'Invalid password' });
-    }
-  } else {
-    res.status(404).json({ error: 'User not found' });
+  if (!userDoc) {
+    return res.status(404).json({ error: 'User not found' });
   }
+
+  // ✅ Check if user is banned
+  if (userDoc.status === "banned") {
+    return res.status(403).json({ error: '🚫 Your account has been banned.' });
+  }
+
+  const passOk = bcrypt.compareSync(password, userDoc.password);
+
+  if (!passOk) {
+    return res.status(422).json({ error: 'Invalid password' });
+  }
+
+  jwt.sign(
+    {
+      email: userDoc.email,
+      id: userDoc._id,
+      name: userDoc.name,
+      role: userDoc.role,
+    },
+    jwtSecret,
+    {},
+    (err, token) => {
+      if (err) throw err;
+      res.cookie('token', token, { httpOnly: true }).json({
+        token,
+        id: userDoc._id,
+        name: userDoc.name,
+        email: userDoc.email,
+        role: userDoc.role,
+        status: userDoc.status, // ✅ include status in response
+      });
+    }
+  );
 });
 
 

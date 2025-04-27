@@ -12,7 +12,6 @@ export default function LoginPage({ setIsAuthenticated }) {
   async function handleLoginSubmit(ev) {
     ev.preventDefault();
 
-    // Empty input check
     if (!email || !password) {
       setErrorMessage("Please enter both email and password.");
       setShowErrorModal(true);
@@ -23,12 +22,18 @@ export default function LoginPage({ setIsAuthenticated }) {
       const response = await axios.post('/login', { email, password }, { withCredentials: true });
 
       if (response.status === 200) {
-        const { token, id, name, email, role } = response.data;
+        const { token, id, name, email, role, status } = response.data;
+
+        if (status === "banned") {
+          setErrorMessage("🚫 Your account has been banned. You cannot log in.");
+          setShowErrorModal(true);
+          return;
+        }
+
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify({ id, name, email, role }));
+        localStorage.setItem('user', JSON.stringify({ id, name, email, role, status }));
         setIsAuthenticated(true);
 
-        // Redirect based on role
         if (role === 'admin') {
           navigate('/admin-dashboard');
         } else {
@@ -76,7 +81,6 @@ export default function LoginPage({ setIsAuthenticated }) {
         </div>
       </form>
 
-      {/* Error Modal */}
       {showErrorModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center animate-fade-in">
