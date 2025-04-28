@@ -317,16 +317,7 @@
   animation: fadeIn 0.2s ease;
 }
 
-.modal-content {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 28rem;
-  width: 100%;
-  text-align: center;
-  animation: slideUp 0.3s ease;
-}
+
 
 .modal-title {
   font-size: 1.5rem;
