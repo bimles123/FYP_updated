@@ -517,7 +517,9 @@ app.post('/login', async (req, res) => {
   const userDoc = await User.findOne({ email });
 
   if (!userDoc) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ 
+      
+      error: 'User not found' });
   }
 
   // ✅ Check if user is banned

@@ -13,8 +13,30 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
+  // Helper for email validation
+  const isValidEmail = email =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   async function registerUser(ev) {
     ev.preventDefault();
+
+    // Frontend Validation
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setErrorMessage("Please fill in all required fields.");
+      setShowErrorModal(true);
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      setShowErrorModal(true);
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters long.");
+      setShowErrorModal(true);
+      return;
+    }
+
     try {
       await axios.post('/register', {
         name,
@@ -25,7 +47,9 @@ export default function RegisterPage() {
       setSuccessMessage("Registration successful.");
       setShowSuccessModal(true);
     } catch (e) {
-      setErrorMessage("Registration failed.");
+      setErrorMessage(
+        e.response?.data?.error || "Registration failed."
+      );
       setShowErrorModal(true);
     }
   }
@@ -43,6 +67,7 @@ export default function RegisterPage() {
           value={name}
           onChange={ev => setName(ev.target.value)}
           className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
         />
         <input
           type="email"
@@ -50,6 +75,7 @@ export default function RegisterPage() {
           value={email}
           onChange={ev => setEmail(ev.target.value)}
           className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
         />
         <input
           type="password"
@@ -57,6 +83,8 @@ export default function RegisterPage() {
           value={password}
           onChange={ev => setPassword(ev.target.value)}
           className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+          minLength={6}
         />
         <input
           type="text"
@@ -93,11 +121,11 @@ export default function RegisterPage() {
         </div>
       )}
 
-      {/* Error Modal */}
+      {/* Error Modal - Style matches your example */}
       {showErrorModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center animate-fade-in">
-            <h2 className="text-xl font-semibold text-red-600 mb-3">Error</h2>
+            <h2 className="text-xl font-semibold text-red-600 mb-3">Registration Failed</h2>
             <p className="text-gray-700 mb-6">{errorMessage}</p>
             <button
               onClick={() => setShowErrorModal(false)}
