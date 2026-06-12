@@ -11,7 +11,7 @@ const HomePage = ({ searchValue }) => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/hotels");
+        const response = await axios.get("/api/hotels");
         setHotels(response.data);
       } catch (error) {
         console.error("Error fetching hotels:", error);

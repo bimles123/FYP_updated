@@ -33,7 +33,13 @@ const jwtSecret = 'fasd213gfuad34yhgy5i3u';
 // Middleware setup
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
+app.use(cors({ 
+  credentials: true, 
+  origin: [
+    'http://localhost:5173',
+    'https://fyp-updated-szyn.vercel.app'
+  ]
+ }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
@@ -57,7 +63,7 @@ app.post('/api/upload', upload.array('media', 10), (req, res) => {
   try {
     const files = req.files.map(file => ({
       type: file.mimetype.startsWith('video') ? 'video' : 'image',
-      url: `http://localhost:4000/uploads/${file.filename}`
+      url: `https://fyp-updated-pgw2.onrender.com/uploads/${file.filename}`
     }));
     res.json(files);
   } catch (error) {
@@ -759,7 +765,7 @@ app.put('/api/bookings/:id/accept', async (req, res) => {
       { new: true }
     ).populate('user').populate('hotel');
 
-    const payNowLink = `http://localhost:5173/payment/${updated._id}`;
+    const payNowLink = `https://fyp-updated-szyn.vercel.app/payment/${updated._id}`;
 
     await Message.create({
       sender: updated.hotel.user,

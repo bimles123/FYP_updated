@@ -21,7 +21,7 @@ import ForumPage from './assets/pages/ForumPage.jsx';
 
 
 import axios from 'axios';
-axios.defaults.baseURL = 'http://localhost:4000';
+axios.defaults.baseURL = 'https://fyp-updated-pgw2.onrender.com';
 
 function App() {
   const navigate = useNavigate();
