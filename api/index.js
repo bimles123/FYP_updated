@@ -839,14 +839,8 @@ app.get('/api/admin/logs', async (req, res) => {
 
 
 /* ========== SERVER ========== */
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use.`);
-    process.exit(1);
-  } else {
-    console.error('Server error:', err);
-  }
+  console.log(`Server running on port ${PORT}`);
 });

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import axios from "axios"
-import "./assets/css/header.css"
+import "./assets/css/Header.css"
 import { useNavigate } from "react-router-dom"
 
 export default function Header({ searchValue, setSearchValue }) {
