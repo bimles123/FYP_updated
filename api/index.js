@@ -715,12 +715,21 @@ app.post('/api/bookings', async (req, res) => {
     if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
 
     const newBooking = await Booking.create({ hotel: hotelId, user: userId, checkIn, checkOut });
-    
+
+    // --- Send notification/message to hotel owner ---
+    await Message.create({
+      sender: userId,                // Booking user
+      receiver: hotel.user,          // Hotel owner
+      message: `🛎️ New booking request for your hotel "${hotel.name}" from ${new Date(checkIn).toDateString()} to ${new Date(checkOut).toDateString()}. Please review and accept or reject the request.`
+    });
+    // --------------------------------------------------
+
     res.json(newBooking);
   } catch (err) {
     res.status(500).json({ error: 'Booking failed.' });
   }
 });
+
 
 // Get bookings for a user (made and received)
 app.get('/api/my-bookings/:userId', async (req, res) => {

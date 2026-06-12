@@ -26,6 +26,9 @@ const HotelDetailPage = () => {
   const [deleteIndex, setDeleteIndex] = useState(null); // index of media to delete
   const [showBookingErrorModal, setShowBookingErrorModal] = useState(false);
   const [bookingErrorMessage, setBookingErrorMessage] = useState("");
+  const [showReportSuccessModal, setShowReportSuccessModal] = useState(false);
+  const [reportSuccessMessage, setReportSuccessMessage] = useState("");
+
 
 
   
@@ -331,10 +334,12 @@ const HotelDetailPage = () => {
                       reason: reportReason,
                       details: reportDetails,
                     });
-                    alert("✅ Report submitted to admin.");
+                    setReportSuccessMessage("✅ Report submitted to admin.");
+                    setShowReportSuccessModal(true);
                     setReportReason("");
                     setReportDetails("");
                     setShowReportModal(false);
+                    
                   } catch (err) {
                     alert("Failed to submit report.");
                   }
@@ -446,6 +451,22 @@ const HotelDetailPage = () => {
           </div>
         </div>
       )}
+
+      {showReportSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center animate-fade-in">
+            <h2 className="text-xl font-semibold text-green-600 mb-3">Report Submitted</h2>
+            <p className="text-gray-700 mb-6">{reportSuccessMessage}</p>
+            <button
+              onClick={() => setShowReportSuccessModal(false)}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
 
     </div>
   );

@@ -248,19 +248,31 @@ export default function AdminDashboard() {
                     <div className="report-date">🕒 {new Date(r.createdAt).toLocaleString()}</div>
                   </div>
                   <div className="report-content">
-                    <div className="report-item">
-                      <strong>Hotel:</strong>{" "}
+                  <div className="report-item">
+                    <strong>Hotel:</strong>{" "}
+                    {r.hotel ? (
                       <Link to={`/hotel/${r.hotel._id}`} className="hotel-link">
                         {r.hotel.name}
                       </Link>
-                    </div>
-                    <div className="report-item">
-                      <strong>Reporter:</strong>{" "}
-                      <Link to={`/user/${r.reporter._id}`} className="user-link">
-                        {r.reporter.name}
-                      </Link>{" "}
-                      <span className="reporter-email">({r.reporter.email})</span>
-                    </div>
+                    ) : (
+                      <span className="text-red-500">Hotel deleted</span>
+                    )}
+                  </div>
+
+                  <div className="report-item">
+                    <strong>Reporter:</strong>{" "}
+                    {r.reporter ? (
+                      <>
+                        <Link to={`/user/${r.reporter._id}`} className="user-link">
+                          {r.reporter.name}
+                        </Link>{" "}
+                        <span className="reporter-email">({r.reporter.email})</span>
+                      </>
+                    ) : (
+                      <span className="text-red-500">Reporter deleted</span>
+                    )}
+                  </div>
+
                     <div className="report-item">
                       <strong>Reason:</strong> <span className="report-reason">{r.reason}</span>
                     </div>
